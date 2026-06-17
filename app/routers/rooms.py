@@ -4,7 +4,9 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.database import get_db
+from app.models.pansionat import Pansionat
 from app.models.room import Room
+from app.models.room_type import RoomType
 from app.schemas.room import RoomCreate, RoomResponse
 
 router = APIRouter(prefix="/rooms", tags=["rooms"])
@@ -25,6 +27,10 @@ def get_one(room_id: int, db: Session = Depends(get_db)):
 
 @router.post("/", response_model=RoomResponse, status_code=201)
 def create(data: RoomCreate, db: Session = Depends(get_db)):
+    if db.get(Pansionat, data.pansionat_id) is None:
+        raise HTTPException(status_code=404, detail="Pansionat not found")
+    if db.get(RoomType, data.room_type_id) is None:
+        raise HTTPException(status_code=404, detail="Room type not found")
     room = Room(**data.model_dump())
     db.add(room)
     db.commit()

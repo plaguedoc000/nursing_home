@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.bed import Bed
+from app.models.room import Room
 from app.schemas.bed import BedCreate, BedStatusUpdate, BedResponse
 
 router = APIRouter(prefix="/beds", tags=["beds"])
@@ -25,6 +26,8 @@ def get_one(bed_id: int, db: Session = Depends(get_db)):
 
 @router.post("/", response_model=BedResponse, status_code=201)
 def create(data: BedCreate, db: Session = Depends(get_db)):
+    if db.get(Room, data.room_id) is None:
+        raise HTTPException(status_code=404, detail="Room not found")
     bed = Bed(**data.model_dump())
     db.add(bed)
     db.commit()
