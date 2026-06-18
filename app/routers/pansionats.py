@@ -10,6 +10,7 @@ from app.schemas.pansionat import PansionatCreate, PansionatResponse
 router = APIRouter(prefix="/pansionats", tags=["pansionats"])
 
 
+# TODO: добавить пагинацию когда записей станет много
 @router.get("/", response_model=list[PansionatResponse])
 def get_all(db: Session = Depends(get_db)):
     return db.execute(select(Pansionat)).scalars().all()

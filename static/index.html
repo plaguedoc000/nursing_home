@@ -1,522 +1,1013 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Пансионат — Управление</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Пансионат — Управление</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+tr.row-free td:first-child { border-left:3px solid #198754 }
+tr.row-occupied td:first-child { border-left:3px solid #dc3545 }
+tr.row-repair td:first-child { border-left:3px solid #ffc107 }
+tr.row-overdue { background:#fff3cd !important }
+th.sortable { cursor:pointer; user-select:none; white-space:nowrap }
+th.sortable:hover { background:#e9ecef }
+.sort-icon { opacity:.4; font-size:.75em }
+th.sorted .sort-icon { opacity:1; color:#0d6efd }
+.bulk-bar { background:#e7f1ff; border:1px solid #b8d4f8; border-radius:6px }
+</style>
 </head>
 <body class="bg-light">
 
-<nav class="navbar navbar-dark bg-dark mb-4">
-    <div class="container-fluid">
-        <span class="navbar-brand fw-bold">Сеть пансионатов</span>
-    </div>
+<nav class="navbar navbar-dark bg-dark">
+  <div class="container-fluid">
+    <span class="navbar-brand fw-bold">Управление пансионатом</span>
+  </div>
 </nav>
 
-<div class="container">
-    <ul class="nav nav-tabs mb-3" id="mainTabs" role="tablist">
-        <li class="nav-item" role="presentation">
-            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-beds" type="button">Кровати</button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-residents" type="button">Жильцы</button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-bookings" type="button">Бронирования</button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-reference" type="button">Справочники</button>
-        </li>
-    </ul>
+<div class="container mt-3">
 
-    <div class="tab-content">
-
-        <div class="tab-pane fade show active" id="tab-beds">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <h5 class="mb-0">Спальные места</h5>
-                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalAddBed">+ Добавить</button>
-            </div>
-            <div class="table-responsive">
-                <table class="table table-striped table-hover bg-white">
-                    <thead><tr><th>ID</th><th>Название</th><th>Комната</th><th>Состояние</th><th>Жилец</th><th></th></tr></thead>
-                    <tbody id="bedsTable"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="tab-pane fade" id="tab-residents">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <div class="d-flex align-items-center gap-2">
-                    <h5 class="mb-0">Жильцы</h5>
-                    <div class="btn-group btn-group-sm">
-                        <button class="btn btn-outline-primary active" id="btnCurrent" onclick="loadResidents(true)">Текущие</button>
-                        <button class="btn btn-outline-secondary" id="btnArchive" onclick="loadResidents(false)">Архив</button>
-                    </div>
-                </div>
-                <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalCheckIn">+ Заселить</button>
-            </div>
-            <div class="table-responsive">
-                <table class="table table-striped table-hover bg-white">
-                    <thead><tr><th>ID</th><th>ФИО</th><th>Заезд</th><th>Плановый выезд</th><th>Цена/сутки</th><th></th></tr></thead>
-                    <tbody id="residentsTable"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="tab-pane fade" id="tab-bookings">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <h5 class="mb-0">Бронирования</h5>
-                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalAddBooking">+ Забронировать</button>
-            </div>
-            <div class="table-responsive">
-                <table class="table table-striped table-hover bg-white">
-                    <thead><tr><th>ID</th><th>Кровать</th><th>ФИО</th><th>Телефон</th><th>Заезд</th><th>Выезд</th><th></th></tr></thead>
-                    <tbody id="bookingsTable"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="tab-pane fade" id="tab-reference">
-            <div class="card mb-3">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <span class="fw-semibold">Пансионаты</span>
-                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#modalAddPansionat">+ Добавить</button>
-                </div>
-                <div class="card-body p-0">
-                    <table class="table table-sm mb-0">
-                        <thead><tr><th>ID</th><th>Название</th><th>Адрес</th><th></th></tr></thead>
-                        <tbody id="pansionatsTable"></tbody>
-                    </table>
-                </div>
-            </div>
-            <div class="card mb-3">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <span class="fw-semibold">Типы комнат</span>
-                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#modalAddRoomType">+ Добавить</button>
-                </div>
-                <div class="card-body p-0">
-                    <table class="table table-sm mb-0">
-                        <thead><tr><th>ID</th><th>Тип</th><th>Цена/сутки</th><th></th></tr></thead>
-                        <tbody id="roomTypesTable"></tbody>
-                    </table>
-                </div>
-            </div>
-            <div class="card mb-3">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <span class="fw-semibold">Комнаты</span>
-                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#modalAddRoom">+ Добавить</button>
-                </div>
-                <div class="card-body p-0">
-                    <table class="table table-sm mb-0">
-                        <thead><tr><th>ID</th><th>Номер</th><th>Пансионат</th><th>Тип</th><th></th></tr></thead>
-                        <tbody id="roomsTable"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
+  <div class="row g-3 mb-3">
+    <div class="col-6 col-md-3">
+      <div class="card border-primary text-center py-2">
+        <div class="fw-bold fs-4" id="sTot">—</div><div class="text-muted small">Всего мест</div>
+      </div>
     </div>
+    <div class="col-6 col-md-3">
+      <div class="card border-success text-center py-2">
+        <div class="fw-bold fs-4 text-success" id="sFree">—</div><div class="text-muted small">Свободных</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card border-danger text-center py-2">
+        <div class="fw-bold fs-4 text-danger" id="sOcc">—</div><div class="text-muted small">Занятых</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card border-warning text-center py-2">
+        <div class="fw-bold fs-4 text-warning" id="sRep">—</div><div class="text-muted small">На ремонте</div>
+      </div>
+    </div>
+  </div>
+
+  <ul class="nav nav-tabs mb-3" id="mainTabs" role="tablist">
+    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-beds">Кровати</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-residents">Жильцы</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-bookings">Бронирования</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-ref">Справочники</button></li>
+  </ul>
+
+  <div class="tab-content">
+
+    <div class="tab-pane fade show active" id="tab-beds">
+      <div class="row g-2 align-items-center mb-2">
+        <div class="col-sm-4">
+          <input type="search" class="form-control form-control-sm" id="searchBeds" placeholder="Поиск: место, комната, пансионат…" oninput="renderBeds()">
+        </div>
+        <div class="col-sm-3">
+          <select class="form-select form-select-sm" id="filterBedStatus" onchange="renderBeds()">
+            <option value="">Все статусы</option>
+            <option value="free">Свободные</option>
+            <option value="occupied">Занятые</option>
+            <option value="repair">На ремонте</option>
+          </select>
+        </div>
+        <div class="col-sm-3">
+          <select class="form-select form-select-sm" id="filterBedPansionat" onchange="renderBeds()">
+            <option value="">Все пансионаты</option>
+          </select>
+        </div>
+        <div class="col-sm-2 text-end">
+          <button class="btn btn-primary btn-sm" onclick="openAddBedModal()">+ Кровать</button>
+        </div>
+      </div>
+      <div class="bulk-bar d-none p-2 mb-2 d-flex gap-2 align-items-center" id="bulk-beds">
+        <span class="fw-semibold small">Выбрано: <span id="bulk-beds-n">0</span></span>
+        <button class="btn btn-sm btn-outline-danger" onclick="bulkDeleteBeds()">Удалить выбранные</button>
+        <button class="btn btn-sm btn-outline-secondary ms-auto" onclick="clearSelection('beds')">Снять выделение</button>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover bg-white align-middle mb-0">
+          <thead class="table-light" id="bedsHead"></thead>
+          <tbody id="bedsBody"></tbody>
+        </table>
+      </div>
+      <div class="text-muted small mt-1" id="bedsCount"></div>
+    </div>
+
+    <div class="tab-pane fade" id="tab-residents">
+      <div class="row g-2 align-items-center mb-2">
+        <div class="col-sm-5">
+          <input type="search" class="form-control form-control-sm" id="searchResidents" placeholder="Поиск по ФИО…" oninput="renderResidents()">
+        </div>
+        <div class="col-sm-3">
+          <div class="btn-group btn-group-sm w-100">
+            <button class="btn btn-outline-primary active" id="btnCurrent" onclick="switchResidents(true)">Текущие</button>
+            <button class="btn btn-outline-secondary" id="btnArchive" onclick="switchResidents(false)">Архив</button>
+          </div>
+        </div>
+        <div class="col-sm-4 text-end">
+          <button class="btn btn-success btn-sm" onclick="openCheckIn(null)">+ Заселить</button>
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover bg-white align-middle mb-0">
+          <thead class="table-light" id="residentsHead"></thead>
+          <tbody id="residentsBody"></tbody>
+        </table>
+      </div>
+      <div class="text-muted small mt-1" id="residentsCount"></div>
+    </div>
+
+    <div class="tab-pane fade" id="tab-bookings">
+      <div class="row g-2 align-items-center mb-2">
+        <div class="col-sm-5">
+          <input type="search" class="form-control form-control-sm" id="searchBookings" placeholder="Поиск по ФИО или телефону…" oninput="renderBookings()">
+        </div>
+        <div class="col-sm-7 text-end">
+          <button class="btn btn-primary btn-sm" onclick="openBookingModal()">+ Забронировать</button>
+        </div>
+      </div>
+      <div class="bulk-bar d-none p-2 mb-2 d-flex gap-2 align-items-center" id="bulk-bookings">
+        <span class="fw-semibold small">Выбрано: <span id="bulk-bookings-n">0</span></span>
+        <button class="btn btn-sm btn-outline-danger" onclick="bulkCancelBookings()">Отменить выбранные</button>
+        <button class="btn btn-sm btn-outline-secondary ms-auto" onclick="clearSelection('bookings')">Снять выделение</button>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover bg-white align-middle mb-0">
+          <thead class="table-light" id="bookingsHead"></thead>
+          <tbody id="bookingsBody"></tbody>
+        </table>
+      </div>
+      <div class="text-muted small mt-1" id="bookingsCount"></div>
+    </div>
+
+    <div class="tab-pane fade" id="tab-ref">
+      <div class="alert alert-info d-flex gap-2 mb-3" id="setupHint">
+        <span>ℹ️</span><div><strong>Порядок настройки:</strong> Пансионат → Тип комнаты → Комната → Кровать</div>
+      </div>
+      <div class="card mb-3">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span class="fw-semibold">Пансионаты</span>
+          <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#mAddPansionat">+ Добавить</button>
+        </div>
+        <div class="card-body p-0">
+          <table class="table table-sm mb-0"><thead><tr><th>#</th><th>Название</th><th>Адрес</th><th></th></tr></thead>
+          <tbody id="pansionatsBody"></tbody></table>
+        </div>
+      </div>
+      <div class="card mb-3">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span class="fw-semibold">Типы комнат</span>
+          <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#mAddRoomType">+ Добавить</button>
+        </div>
+        <div class="card-body p-0">
+          <table class="table table-sm mb-0"><thead><tr><th>#</th><th>Название</th><th>Цена/сутки</th><th></th></tr></thead>
+          <tbody id="roomTypesBody"></tbody></table>
+        </div>
+      </div>
+      <div class="card mb-3">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span class="fw-semibold">Комнаты</span>
+          <button class="btn btn-sm btn-primary" onclick="openAddRoomModal()">+ Добавить</button>
+        </div>
+        <div class="card-body p-0">
+          <div class="p-2">
+            <input type="search" class="form-control form-control-sm" id="searchRooms" placeholder="Поиск: номер, пансионат, тип…" oninput="renderRooms()">
+          </div>
+          <table class="table table-sm mb-0"><thead><tr><th>Номер</th><th>Пансионат</th><th>Тип</th><th>Цена/сут</th><th></th></tr></thead>
+          <tbody id="roomsBody"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+  </div>
 </div>
+
+<div class="modal fade" id="mCheckInFromBooking" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+  <div class="modal-header"><h5 class="modal-title">Заселение по бронированию</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+  <div class="modal-body">
+    <div class="p-3 bg-light rounded mb-3" id="bkInfoDisplay"></div>
+    <form id="fCheckInFromBooking">
+      <div class="row g-2">
+        <div class="col-6"><label class="form-label">Серия паспорта</label><input type="text" class="form-control" name="passport_series" placeholder="4521" required></div>
+        <div class="col-6"><label class="form-label">Номер паспорта</label><input type="text" class="form-control" name="passport_number" placeholder="123456" required></div>
+        <div class="col-12"><label class="form-label">Дата рождения</label><input type="date" class="form-control" name="birth_date" required></div>
+      </div>
+    </form>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+    <button class="btn btn-success" onclick="submitCheckInFromBooking()">Заселить</button>
+  </div>
+</div></div></div>
 
 <div class="position-fixed bottom-0 end-0 p-3" style="z-index:1100">
-    <div id="toast" class="toast" role="alert">
-        <div class="toast-header">
-            <strong class="me-auto" id="toastTitle"></strong>
-            <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
-        </div>
-        <div class="toast-body" id="toastBody"></div>
+  <div id="toast" class="toast align-items-center border-0 text-white" role="alert">
+    <div class="d-flex">
+      <div class="toast-body fw-semibold" id="toastBody"></div>
+      <button class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
     </div>
+  </div>
 </div>
 
-<div class="modal fade" id="modalAddBed" tabindex="-1">
-    <div class="modal-dialog"><div class="modal-content">
-        <div class="modal-header"><h5 class="modal-title">Новое спальное место</h5></div>
-        <div class="modal-body">
-            <form id="formAddBed">
-                <div class="mb-3">
-                    <label class="form-label">ID комнаты</label>
-                    <input type="number" class="form-control" name="room_id" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Название места</label>
-                    <input type="text" class="form-control" name="bed_label" placeholder="Кровать А" required>
-                </div>
-            </form>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-            <button class="btn btn-primary" onclick="submitAddBed()">Создать</button>
-        </div>
-    </div></div>
-</div>
+<div class="modal fade" id="mAddBed" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+  <div class="modal-header"><h5 class="modal-title">Новое место</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+  <div class="modal-body">
+    <form id="fAddBed">
+      <div class="mb-3"><label class="form-label fw-semibold">Комната</label>
+        <select class="form-select" id="selRoomForBed" name="room_id" required><option value="">—</option></select>
+        <div class="form-text text-danger d-none" id="noRoomsHint">Нет комнат. Сначала создайте комнаты в Справочниках.</div>
+      </div>
+      <div class="mb-3"><label class="form-label fw-semibold">Название места</label>
+        <input type="text" class="form-control" name="bed_label" placeholder="Кровать А" required>
+      </div>
+    </form>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+    <button class="btn btn-primary" onclick="submitAddBed()">Создать</button>
+  </div>
+</div></div></div>
 
-<div class="modal fade" id="modalCheckIn" tabindex="-1">
-    <div class="modal-dialog"><div class="modal-content">
-        <div class="modal-header"><h5 class="modal-title">Заселение жильца</h5></div>
-        <div class="modal-body">
-            <form id="formCheckIn">
-                <div class="row g-2">
-                    <div class="col-12">
-                        <label class="form-label">ID кровати</label>
-                        <input type="number" class="form-control" name="bed_id" required>
-                    </div>
-                    <div class="col-4">
-                        <label class="form-label">Фамилия</label>
-                        <input type="text" class="form-control" name="last_name" required>
-                    </div>
-                    <div class="col-4">
-                        <label class="form-label">Имя</label>
-                        <input type="text" class="form-control" name="first_name" required>
-                    </div>
-                    <div class="col-4">
-                        <label class="form-label">Отчество</label>
-                        <input type="text" class="form-control" name="middle_name" required>
-                    </div>
-                    <div class="col-6">
-                        <label class="form-label">Серия паспорта</label>
-                        <input type="text" class="form-control" name="passport_series" required>
-                    </div>
-                    <div class="col-6">
-                        <label class="form-label">Номер паспорта</label>
-                        <input type="text" class="form-control" name="passport_number" required>
-                    </div>
-                    <div class="col-6">
-                        <label class="form-label">Дата рождения</label>
-                        <input type="date" class="form-control" name="birth_date" required>
-                    </div>
-                    <div class="col-6">
-                        <label class="form-label">Плановый выезд</label>
-                        <input type="date" class="form-control" name="planned_check_out" required>
-                    </div>
-                </div>
-            </form>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-            <button class="btn btn-success" onclick="submitCheckIn()">Заселить</button>
-        </div>
-    </div></div>
-</div>
+<div class="modal fade" id="mCheckIn" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
+  <div class="modal-header"><h5 class="modal-title">Заселение жильца</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+  <div class="modal-body">
+    <form id="fCheckIn">
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Свободное место</label>
+        <select class="form-select" id="selBedCheckIn" name="bed_id" required><option value="">— выберите —</option></select>
+        <div class="form-text text-success fw-semibold" id="pricePreview"></div>
+      </div>
+      <hr>
+      <div class="row g-2">
+        <div class="col-4"><label class="form-label">Фамилия</label><input type="text" class="form-control" name="last_name" required></div>
+        <div class="col-4"><label class="form-label">Имя</label><input type="text" class="form-control" name="first_name" required></div>
+        <div class="col-4"><label class="form-label">Отчество</label><input type="text" class="form-control" name="middle_name" required></div>
+        <div class="col-6"><label class="form-label">Серия паспорта</label><input type="text" class="form-control" name="passport_series" placeholder="4521" required></div>
+        <div class="col-6"><label class="form-label">Номер паспорта</label><input type="text" class="form-control" name="passport_number" placeholder="123456" required></div>
+        <div class="col-6"><label class="form-label">Дата рождения</label><input type="date" class="form-control" name="birth_date" required></div>
+        <div class="col-6"><label class="form-label">Плановый выезд</label><input type="date" class="form-control" id="ciCheckout" name="planned_check_out" required></div>
+      </div>
+    </form>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+    <button class="btn btn-success" onclick="submitCheckIn()">Заселить</button>
+  </div>
+</div></div></div>
 
-<div class="modal fade" id="modalAddBooking" tabindex="-1">
-    <div class="modal-dialog"><div class="modal-content">
-        <div class="modal-header"><h5 class="modal-title">Новое бронирование</h5></div>
-        <div class="modal-body">
-            <form id="formAddBooking">
-                <div class="row g-2">
-                    <div class="col-12">
-                        <label class="form-label">ID кровати</label>
-                        <input type="number" class="form-control" name="bed_id" required>
-                    </div>
-                    <div class="col-4">
-                        <label class="form-label">Фамилия</label>
-                        <input type="text" class="form-control" name="future_res_last_name" required>
-                    </div>
-                    <div class="col-4">
-                        <label class="form-label">Имя</label>
-                        <input type="text" class="form-control" name="future_res_first_name" required>
-                    </div>
-                    <div class="col-4">
-                        <label class="form-label">Отчество</label>
-                        <input type="text" class="form-control" name="future_res_mid_name" required>
-                    </div>
-                    <div class="col-12">
-                        <label class="form-label">Телефон</label>
-                        <input type="text" class="form-control" name="contact_phone" required>
-                    </div>
-                    <div class="col-6">
-                        <label class="form-label">Дата заезда</label>
-                        <input type="date" class="form-control" name="planned_check_in" required>
-                    </div>
-                    <div class="col-6">
-                        <label class="form-label">Дата выезда</label>
-                        <input type="date" class="form-control" name="planned_check_out" required>
-                    </div>
-                </div>
-            </form>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-            <button class="btn btn-primary" onclick="submitAddBooking()">Забронировать</button>
-        </div>
-    </div></div>
-</div>
+<div class="modal fade" id="mAddBooking" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
+  <div class="modal-header"><h5 class="modal-title">Новое бронирование</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+  <div class="modal-body">
+    <form id="fAddBooking">
+      <div class="mb-3"><label class="form-label fw-semibold">Спальное место</label>
+        <select class="form-select" id="selBedBooking" name="bed_id" required><option value="">— выберите —</option></select>
+      </div>
+      <hr>
+      <div class="row g-2">
+        <div class="col-4"><label class="form-label">Фамилия</label><input type="text" class="form-control" name="future_res_last_name" required></div>
+        <div class="col-4"><label class="form-label">Имя</label><input type="text" class="form-control" name="future_res_first_name" required></div>
+        <div class="col-4"><label class="form-label">Отчество</label><input type="text" class="form-control" name="future_res_mid_name" required></div>
+        <div class="col-12"><label class="form-label">Телефон</label><input type="text" class="form-control" name="contact_phone" placeholder="+7-900-000-00-00" required></div>
+        <div class="col-6"><label class="form-label">Дата заезда</label><input type="date" class="form-control" id="bkCheckin" name="planned_check_in" required></div>
+        <div class="col-6"><label class="form-label">Дата выезда</label><input type="date" class="form-control" id="bkCheckout" name="planned_check_out" required></div>
+      </div>
+    </form>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+    <button class="btn btn-primary" onclick="submitAddBooking()">Забронировать</button>
+  </div>
+</div></div></div>
 
-<div class="modal fade" id="modalAddPansionat" tabindex="-1">
-    <div class="modal-dialog"><div class="modal-content">
-        <div class="modal-header"><h5 class="modal-title">Новый пансионат</h5></div>
-        <div class="modal-body">
-            <form id="formAddPansionat">
-                <div class="mb-3">
-                    <label class="form-label">Название</label>
-                    <input type="text" class="form-control" name="name" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Адрес</label>
-                    <input type="text" class="form-control" name="address" required>
-                </div>
-            </form>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-            <button class="btn btn-primary" onclick="submitAddPansionat()">Создать</button>
-        </div>
-    </div></div>
-</div>
+<div class="modal fade" id="mAddPansionat" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+  <div class="modal-header"><h5 class="modal-title">Новый пансионат</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+  <div class="modal-body"><form id="fAddPansionat">
+    <div class="mb-3"><label class="form-label">Название</label><input type="text" class="form-control" name="name" required></div>
+    <div class="mb-3"><label class="form-label">Адрес</label><input type="text" class="form-control" name="address" required></div>
+  </form></div>
+  <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button><button class="btn btn-primary" onclick="submitPansionat()">Создать</button></div>
+</div></div></div>
 
-<div class="modal fade" id="modalAddRoomType" tabindex="-1">
-    <div class="modal-dialog"><div class="modal-content">
-        <div class="modal-header"><h5 class="modal-title">Новый тип комнаты</h5></div>
-        <div class="modal-body">
-            <form id="formAddRoomType">
-                <div class="mb-3">
-                    <label class="form-label">Название типа</label>
-                    <input type="text" class="form-control" name="type_name" placeholder="Стандарт" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Цена за сутки (₽)</label>
-                    <input type="number" step="0.01" class="form-control" name="base_price" required>
-                </div>
-            </form>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-            <button class="btn btn-primary" onclick="submitAddRoomType()">Создать</button>
-        </div>
-    </div></div>
-</div>
+<div class="modal fade" id="mAddRoomType" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+  <div class="modal-header"><h5 class="modal-title">Новый тип комнаты</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+  <div class="modal-body"><form id="fAddRoomType">
+    <div class="mb-3"><label class="form-label">Название</label><input type="text" class="form-control" name="type_name" required></div>
+    <div class="mb-3"><label class="form-label">Цена за сутки, ₽</label><input type="number" step="0.01" min="1" class="form-control" name="base_price" required></div>
+  </form></div>
+  <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button><button class="btn btn-primary" onclick="submitRoomType()">Создать</button></div>
+</div></div></div>
 
-<div class="modal fade" id="modalAddRoom" tabindex="-1">
-    <div class="modal-dialog"><div class="modal-content">
-        <div class="modal-header"><h5 class="modal-title">Новая комната</h5></div>
-        <div class="modal-body">
-            <form id="formAddRoom">
-                <div class="mb-3">
-                    <label class="form-label">ID пансионата</label>
-                    <input type="number" class="form-control" name="pansionat_id" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">ID типа комнаты</label>
-                    <input type="number" class="form-control" name="room_type_id" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Номер комнаты</label>
-                    <input type="text" class="form-control" name="room_number" placeholder="101" required>
-                </div>
-            </form>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-            <button class="btn btn-primary" onclick="submitAddRoom()">Создать</button>
-        </div>
-    </div></div>
-</div>
+<div class="modal fade" id="mAddRoom" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+  <div class="modal-header"><h5 class="modal-title">Новая комната</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+  <div class="modal-body"><form id="fAddRoom">
+    <div class="mb-3"><label class="form-label">Пансионат</label><select class="form-select" id="selPansionatRoom" name="pansionat_id" required><option value="">—</option></select></div>
+    <div class="mb-3"><label class="form-label">Тип комнаты</label><select class="form-select" id="selRoomTypeRoom" name="room_type_id" required><option value="">—</option></select></div>
+    <div class="mb-3"><label class="form-label">Номер комнаты</label><input type="text" class="form-control" name="room_number" placeholder="101" required></div>
+  </form></div>
+  <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button><button class="btn btn-primary" onclick="submitRoom()">Создать</button></div>
+</div></div></div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-async function api(method, path, body) {
-    const opts = { method, headers: { 'Content-Type': 'application/json' } };
-    if (body) opts.body = JSON.stringify(body);
-    const res = await fetch(path, opts);
-    if (!res.ok) {
-        const err = await res.json().catch(() => ({ detail: 'Ошибка сервера' }));
-        throw new Error(err.detail || 'Ошибка');
-    }
-    if (res.status === 204) return null;
-    return res.json();
+const ERR = {
+  'Bed is already booked for these dates':'Кровать уже забронирована на эти даты',
+  'Bed is under repair':'Кровать на ремонте',
+  'Bed is already occupied':'Кровать уже занята',
+  'Cannot deactivate bed with a current resident':'Нельзя: на кровати есть жилец',
+  'Resident has already checked out':'Жилец уже выселен',
+  'Cannot delete: pansionat has rooms':'Нельзя удалить: есть комнаты',
+  'Cannot delete: room has beds':'Нельзя удалить: есть кровати',
+  'Cannot delete: room type is used in rooms':'Нельзя удалить: тип используется в комнатах',
+  'Cannot delete: bed has bookings or a resident':'Нельзя удалить: есть жилец или брони',
+  'Room not found':'Комната не найдена',
+  'Bed not found':'Кровать не найдена',
+  'Room type not found':'Тип комнаты не найден',
+  'Pansionat not found':'Пансионат не найден',
+  'Resident not found':'Жилец не найден',
+  'Booking not found':'Бронирование не найдено',
+  'Check-in date must be before check-out date':'Дата заезда должна быть раньше даты выезда',
+  'Planned check-out must be in the future':'Дата выезда должна быть в будущем',
+  'Bed is occupied during these dates':'Кровать занята в эти даты',
+  'Cannot cancel a booking after check-in date':'Нельзя отменить бронь: дата заезда уже наступила',
+  'Bed has an active booking for these dates':'На это место есть активное бронирование',
+  'Bed was just occupied by someone else':'Место только что занял другой жилец — попробуйте снова',
+};
+function tr(msg) { return ERR[msg] || msg; }
+
+const refs = {pansionats:{}, roomTypes:{}, rooms:{}, beds:{}};
+let allBeds = [], allResidents = [], allBookings = [], allRooms = [];
+let showCurrentResidents = true;
+
+let activeBookingForCheckIn = null;
+
+const sorts = {
+  beds: {key:null, dir:1},
+  residents: {key:null, dir:1},
+  bookings: {key:null, dir:1},
+};
+const selected = {beds: new Set(), bookings: new Set()};
+
+async function apiFetch(method, path, body) {
+  const opts = {method, headers:{'Content-Type':'application/json'}};
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(path, opts);
+  if (!res.ok) {
+    const e = await res.json().catch(() => ({detail:'Ошибка сервера'}));
+    throw new Error(tr(e.detail||'Неизвестная ошибка'));
+  }
+  if (res.status === 204) return null;
+  return res.json();
 }
 
-function notify(msg, isError) {
-    document.getElementById('toastTitle').textContent = isError ? 'Ошибка' : 'Готово';
-    document.getElementById('toastBody').textContent = msg;
-    const el = document.getElementById('toast');
-    el.className = 'toast ' + (isError ? 'bg-danger text-white' : 'bg-success text-white');
-    bootstrap.Toast.getOrCreateInstance(el).show();
-}
-
-function readForm(formId) {
-    const obj = {};
-    new FormData(document.getElementById(formId)).forEach((v, k) => { obj[k] = v; });
-    return obj;
+function notify(msg, err) {
+  const el = document.getElementById('toast');
+  el.className = 'toast align-items-center border-0 text-white ' + (err ? 'bg-danger' : 'bg-success');
+  document.getElementById('toastBody').textContent = msg;
+  bootstrap.Toast.getOrCreateInstance(el, {delay: err ? 5000 : 3000}).show();
 }
 
 function closeModal(id) {
-    bootstrap.Modal.getInstance(document.getElementById(id)).hide();
+  const m = bootstrap.Modal.getInstance(document.getElementById(id));
+  if (m) m.hide();
+}
+
+function readForm(id) {
+  const obj = {};
+  new FormData(document.getElementById(id)).forEach((v, k) => obj[k] = v);
+  return obj;
+}
+
+function emptyRow(cols, msg) {
+  return `<tr><td colspan="${cols}" class="text-center text-muted py-4">${msg}</td></tr>`;
+}
+
+function daysUntil(dateStr) {
+  return Math.ceil((new Date(dateStr) - new Date()) / 86400000);
+}
+
+function calcAge(dob) {
+  const t = new Date(), b = new Date(dob);
+  let a = t.getFullYear() - b.getFullYear();
+  if (t.getMonth() < b.getMonth() || (t.getMonth() === b.getMonth() && t.getDate() < b.getDate())) a--;
+  return a;
+}
+
+function sortIcon(table, key) {
+  const s = sorts[table];
+  if (s.key !== key) return '<span class="sort-icon ms-1">⇅</span>';
+  return `<span class="sort-icon ms-1">${s.dir===1?'↑':'↓'}</span>`;
+}
+
+function toggleSort(table, key, renderFn) {
+  const s = sorts[table];
+  s.dir = s.key === key ? s.dir * -1 : 1;
+  s.key = key;
+  renderFn();
+}
+
+function sortedData(arr, table, getVal) {
+  const {key, dir} = sorts[table];
+  if (!key) return arr;
+  return [...arr].sort((a, b) => {
+    const va = getVal(a, key), vb = getVal(b, key);
+    if (va == null) return 1; if (vb == null) return -1;
+    return (va < vb ? -1 : va > vb ? 1 : 0) * dir;
+  });
+}
+
+function updateBulkBar(table) {
+  const n = selected[table].size;
+  const bar = document.getElementById(`bulk-${table}`);
+  if (!bar) return;
+  bar.classList.toggle('d-none', n === 0);
+  document.getElementById(`bulk-${table}-n`).textContent = n;
+}
+
+function clearSelection(table) {
+  selected[table].clear();
+  updateBulkBar(table);
+  if (table === 'beds') renderBeds();
+  else if (table === 'bookings') renderBookings();
+}
+
+function toggleRowSelect(table, id) {
+  if (selected[table].has(id)) selected[table].delete(id);
+  else selected[table].add(id);
+  updateBulkBar(table);
+}
+
+function toggleSelectAll(table, visibleIds, checked) {
+  if (checked) visibleIds.forEach(id => selected[table].add(id));
+  else selected[table].clear();
+  updateBulkBar(table);
+  if (table === 'beds') renderBeds();
+  else if (table === 'bookings') renderBookings();
+}
+
+async function refreshRefs() {
+  const [p, rt, r, b] = await Promise.all([
+    apiFetch('GET','/pansionats/').catch(()=>[]),
+    apiFetch('GET','/room-types/').catch(()=>[]),
+    apiFetch('GET','/rooms/').catch(()=>[]),
+    apiFetch('GET','/beds/').catch(()=>[]),
+  ]);
+  [refs.pansionats, refs.roomTypes, refs.rooms, refs.beds].forEach(o => Object.keys(o).forEach(k=>delete o[k]));
+  p.forEach(x=>refs.pansionats[x.pansionat_id]=x);
+  rt.forEach(x=>refs.roomTypes[x.room_type_id]=x);
+  r.forEach(x=>refs.rooms[x.room_id]=x);
+  b.forEach(x=>refs.beds[x.bed_id]=x);
+  allRooms = r;
+  allBeds = b;
+}
+
+function getPansionat(roomId) { const room=refs.rooms[roomId]; return room?refs.pansionats[room.pansionat_id]:null; }
+function getRoomType(roomId)  { const room=refs.rooms[roomId]; return room?refs.roomTypes[room.room_type_id]:null; }
+
+function updateStats() {
+  const total = allBeds.length;
+  const free = allBeds.filter(b=>b.is_active&&b.current_resident_id===null).length;
+  const occ  = allBeds.filter(b=>b.current_resident_id!==null).length;
+  const rep  = allBeds.filter(b=>!b.is_active).length;
+  document.getElementById('sTot').textContent = total;
+  document.getElementById('sFree').textContent = free;
+  document.getElementById('sOcc').textContent  = occ;
+  document.getElementById('sRep').textContent  = rep;
+}
+
+function populatePansionatFilter() {
+  const sel = document.getElementById('filterBedPansionat');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">Все пансионаты</option>' +
+    Object.values(refs.pansionats).map(p=>`<option value="${p.pansionat_id}">${p.name}</option>`).join('');
+  sel.value = cur;
+}
+
+function bedSortVal(b, key) {
+  const room = refs.rooms[b.room_id];
+  const p    = getPansionat(b.room_id);
+  switch(key) {
+    case 'label':    return b.bed_label;
+    case 'room':     return room?.room_number||'';
+    case 'pansionat':return p?.name||'';
+    case 'status':   return !b.is_active ? 2 : b.current_resident_id ? 1 : 0;
+    default: return null;
+  }
+}
+
+function renderBeds() {
+  const q      = document.getElementById('searchBeds').value.toLowerCase();
+  const status = document.getElementById('filterBedStatus').value;
+  const panId  = parseInt(document.getElementById('filterBedPansionat').value)||0;
+
+  let data = allBeds.filter(b => {
+    const room = refs.rooms[b.room_id];
+    const p    = getPansionat(b.room_id);
+    if (q && ![b.bed_label, room?.room_number||'', p?.name||''].join(' ').toLowerCase().includes(q)) return false;
+    if (status === 'free'     && !(b.is_active && b.current_resident_id===null)) return false;
+    if (status === 'occupied' && b.current_resident_id===null) return false;
+    if (status === 'repair'   && b.is_active) return false;
+    if (panId && p?.pansionat_id !== panId) return false;
+    return true;
+  });
+
+  data = sortedData(data, 'beds', bedSortVal);
+  const visIds = data.map(b=>b.bed_id);
+
+  const allChecked = visIds.length > 0 && visIds.every(id=>selected.beds.has(id));
+  const sk = sorts.beds.key;
+  document.getElementById('bedsHead').innerHTML = `<tr>
+    <th><input type="checkbox" class="form-check-input" ${allChecked?'checked':''} onchange="toggleSelectAll('beds',${JSON.stringify(visIds)},this.checked)"></th>
+    <th class="sortable${sk==='label'?' sorted':''}" onclick="toggleSort('beds','label',renderBeds)">Место${sortIcon('beds','label')}</th>
+    <th class="sortable${sk==='room'?' sorted':''}" onclick="toggleSort('beds','room',renderBeds)">Комната${sortIcon('beds','room')}</th>
+    <th class="sortable${sk==='pansionat'?' sorted':''}" onclick="toggleSort('beds','pansionat',renderBeds)">Пансионат${sortIcon('beds','pansionat')}</th>
+    <th>Тип</th>
+    <th class="sortable${sk==='status'?' sorted':''}" onclick="toggleSort('beds','status',renderBeds)">Статус${sortIcon('beds','status')}</th>
+    <th>Жилец</th><th></th>
+  </tr>`;
+
+  if (!data.length) {
+    document.getElementById('bedsBody').innerHTML = emptyRow(8, 'Нет записей, соответствующих фильтру');
+    document.getElementById('bedsCount').textContent = '';
+    return;
+  }
+
+  document.getElementById('bedsBody').innerHTML = data.map(b => {
+    const isFree  = b.is_active && b.current_resident_id===null;
+    const rowCls  = !b.is_active ? 'row-repair' : b.current_resident_id ? 'row-occupied' : 'row-free';
+    const badge   = !b.is_active
+      ? '<span class="badge bg-warning text-dark">Ремонт</span>'
+      : b.current_resident_id
+        ? '<span class="badge bg-danger">Занята</span>'
+        : '<span class="badge bg-success">Свободна</span>';
+    const room = refs.rooms[b.room_id];
+    const p    = getPansionat(b.room_id);
+    const rt   = getRoomType(b.room_id);
+    const chk  = selected.beds.has(b.bed_id);
+    return `<tr class="${rowCls}">
+      <td><input type="checkbox" class="form-check-input" ${chk?'checked':''} onchange="toggleRowSelect('beds',${b.bed_id}); this.closest('tr').classList.toggle('table-active',this.checked)"></td>
+      <td class="fw-semibold">${b.bed_label}</td>
+      <td>${room?.room_number||'—'}</td>
+      <td>${p?.name||'—'}</td>
+      <td class="text-muted small">${rt?.type_name||'—'}</td>
+      <td>${badge}</td>
+      <td>${b.current_resident_id?`<span class="text-danger small">Занята</span>`:'<span class="text-muted">—</span>'}</td>
+      <td class="text-nowrap">
+        ${isFree?`<button class="btn btn-xs btn-success btn-sm me-1 py-0 px-2" onclick="openCheckIn(${b.bed_id})">Заселить</button>`:''}
+        <button class="btn btn-sm btn-outline-secondary py-0 px-2 me-1" onclick="toggleBed(${b.bed_id},${b.is_active})">
+          ${b.is_active?'На ремонт':'В работу'}
+        </button>
+        <button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="deleteBed(${b.bed_id})">✕</button>
+      </td>
+    </tr>`;
+  }).join('');
+  document.getElementById('bedsCount').textContent = `Показано: ${data.length} из ${allBeds.length}`;
 }
 
 async function loadBeds() {
-    const beds = await api('GET', '/beds/').catch(e => { notify(e.message, true); return []; });
-    document.getElementById('bedsTable').innerHTML = beds.map(b => `
-        <tr>
-            <td>${b.bed_id}</td>
-            <td>${b.bed_label}</td>
-            <td>${b.room_id}</td>
-            <td>${b.is_active
-                ? '<span class="badge bg-success">Активна</span>'
-                : '<span class="badge bg-warning text-dark">Ремонт</span>'}</td>
-            <td>${b.current_resident_id !== null
-                ? `<span class="badge bg-danger">Жилец #${b.current_resident_id}</span>`
-                : '<span class="badge bg-secondary">Свободна</span>'}</td>
-            <td>
-                <button class="btn btn-sm btn-outline-secondary" onclick="toggleBed(${b.bed_id}, ${b.is_active})">
-                    ${b.is_active ? 'На ремонт' : 'В работу'}
-                </button>
-            </td>
-        </tr>`).join('');
+  await refreshRefs();
+  updateStats();
+  populatePansionatFilter();
+  renderBeds();
 }
 
-async function toggleBed(id, current) {
-    await api('PATCH', `/beds/${id}/status`, { is_active: !current }).catch(e => notify(e.message, true));
-    loadBeds();
+async function toggleBed(id, cur) {
+  await apiFetch('PATCH',`/beds/${id}/status`,{is_active:!cur}).catch(e=>notify(e.message,true));
+  await loadBeds();
+}
+
+async function deleteBed(id) {
+  if (!confirm('Удалить это место? Действие нельзя отменить.')) return;
+  await apiFetch('DELETE',`/beds/${id}`).then(()=>{ loadBeds(); notify('Место удалено'); }).catch(e=>notify(e.message,true));
+}
+
+async function bulkDeleteBeds() {
+  const ids = [...selected.beds];
+  if (!ids.length) return;
+  if (!confirm(`Удалить ${ids.length} мест? Это нельзя отменить.`)) return;
+  let ok = 0, fail = 0;
+  for (const id of ids) {
+    await apiFetch('DELETE',`/beds/${id}`).then(()=>ok++).catch(()=>fail++);
+  }
+  selected.beds.clear();
+  updateBulkBar('beds');
+  await loadBeds();
+  notify(`Удалено: ${ok}${fail?`, ошибок: ${fail}`:''}`, fail > 0);
+}
+
+async function openAddBedModal() {
+  const rooms = await apiFetch('GET','/rooms/').catch(()=>[]);
+  const sel = document.getElementById('selRoomForBed');
+  const hint = document.getElementById('noRoomsHint');
+  if (!rooms.length) {
+    sel.innerHTML = '<option value="">— нет комнат —</option>';
+    hint.classList.remove('d-none'); return;
+  }
+  hint.classList.add('d-none');
+  sel.innerHTML = '<option value="">— выберите —</option>' +
+    rooms.map(r => {
+      const p = refs.pansionats[r.pansionat_id];
+      const rt = refs.roomTypes[r.room_type_id];
+      return `<option value="${r.room_id}">Комн. ${r.room_number} — ${p?.name||'?'} (${rt?.type_name||'?'})</option>`;
+    }).join('');
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('mAddBed')).show();
 }
 
 async function submitAddBed() {
-    const data = readForm('formAddBed');
-    data.room_id = parseInt(data.room_id);
-    await api('POST', '/beds/', data).then(() => {
-        closeModal('modalAddBed');
-        document.getElementById('formAddBed').reset();
-        loadBeds();
-        notify('Кровать добавлена');
-    }).catch(e => notify(e.message, true));
+  const data = readForm('fAddBed');
+  data.room_id = parseInt(data.room_id);
+  if (!data.room_id) { notify('Выберите комнату',true); return; }
+  await apiFetch('POST','/beds/',data).then(()=>{
+    closeModal('mAddBed'); document.getElementById('fAddBed').reset();
+    loadBeds(); notify('Место добавлено');
+  }).catch(e=>notify(e.message,true));
 }
 
-async function loadResidents(isCurrent) {
-    document.getElementById('btnCurrent').classList.toggle('active', isCurrent);
-    document.getElementById('btnArchive').classList.toggle('active', !isCurrent);
-    const residents = await api('GET', `/residents/?is_current=${isCurrent}`).catch(e => { notify(e.message, true); return []; });
-    document.getElementById('residentsTable').innerHTML = residents.map(r => `
-        <tr>
-            <td>${r.record_id}</td>
-            <td>${r.last_name} ${r.first_name} ${r.middle_name}</td>
-            <td>${r.check_in_date}</td>
-            <td>${r.planned_check_out}</td>
-            <td>${r.check_in_price} ₽</td>
-            <td>${isCurrent
-                ? `<button class="btn btn-sm btn-outline-danger" onclick="checkOut(${r.record_id})">Выселить</button>`
-                : (r.actual_check_out || '—')}</td>
-        </tr>`).join('');
+async function populateFreeBeds(preselect) {
+  await refreshRefs();
+  const free = allBeds.filter(b=>b.is_active&&b.current_resident_id===null);
+  const sel = document.getElementById('selBedCheckIn');
+  sel.innerHTML = '<option value="">— выберите свободную кровать —</option>' +
+    free.map(b=>{
+      const room = refs.rooms[b.room_id];
+      const p    = getPansionat(b.room_id);
+      const rt   = getRoomType(b.room_id);
+      return `<option value="${b.bed_id}">${b.bed_label} — Комн.${room?.room_number||'?'} — ${p?.name||'?'} — ${rt?.base_price||'?'}₽/сут</option>`;
+    }).join('');
+  if (preselect) { sel.value = preselect; sel.dispatchEvent(new Event('change')); }
+  document.getElementById('ciCheckout').value = new Date(Date.now()+30*86400000).toISOString().slice(0,10);
 }
 
-async function checkOut(id) {
-    if (!confirm('Выселить жильца?')) return;
-    await api('POST', `/residents/${id}/check-out`).then(() => {
-        loadResidents(true);
-        loadBeds();
-        notify('Жилец выселен');
-    }).catch(e => notify(e.message, true));
+async function openCheckIn(bedId) {
+  await populateFreeBeds(bedId);
+  document.getElementById('pricePreview').textContent = '';
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('mCheckIn')).show();
 }
+
+document.getElementById('selBedCheckIn').addEventListener('change', function(){
+  const b = refs.beds[parseInt(this.value)];
+  const rt = b ? getRoomType(b.room_id) : null;
+  document.getElementById('pricePreview').textContent = rt ? `Цена зафиксируется: ${rt.base_price} ₽/сутки` : '';
+});
 
 async function submitCheckIn() {
-    const data = readForm('formCheckIn');
-    data.bed_id = parseInt(data.bed_id);
-    await api('POST', '/residents/check-in', data).then(() => {
-        closeModal('modalCheckIn');
-        document.getElementById('formCheckIn').reset();
-        loadResidents(true);
-        loadBeds();
-        notify('Жилец заселён');
-    }).catch(e => notify(e.message, true));
+  const data = readForm('fCheckIn');
+  data.bed_id = parseInt(data.bed_id);
+  if (!data.bed_id) { notify('Выберите кровать',true); return; }
+  await apiFetch('POST','/residents/check-in',data).then(()=>{
+    closeModal('mCheckIn'); document.getElementById('fCheckIn').reset();
+    document.getElementById('pricePreview').textContent = '';
+    loadBeds(); notify('Жилец заселён');
+  }).catch(e=>notify(e.message,true));
+}
+
+function resSortVal(r, key) {
+  const bed = Object.values(refs.beds).find(b=>b.current_resident_id===r.record_id);
+  const room = bed ? refs.rooms[bed.room_id] : null;
+  switch(key) {
+    case 'name':     return r.last_name+r.first_name;
+    case 'checkin':  return r.check_in_date;
+    case 'checkout': return r.planned_check_out;
+    case 'days':     return daysUntil(r.planned_check_out);
+    case 'price':    return Number(r.check_in_price);
+    case 'age':      return -new Date(r.birth_date).getFullYear();
+    case 'room':     return room?.room_number||'';
+    default: return null;
+  }
+}
+
+function renderResidents() {
+  const q = document.getElementById('searchResidents').value.toLowerCase();
+  let data = allResidents.filter(r => !q ||
+    (r.last_name+' '+r.first_name+' '+r.middle_name).toLowerCase().includes(q));
+  data = sortedData(data, 'residents', resSortVal);
+  const isCurrent = showCurrentResidents;
+  const sk = sorts.residents.key;
+
+  const sortTh = (label, key) =>
+    `<th class="sortable${sk===key?' sorted':''}" onclick="toggleSort('residents','${key}',renderResidents)">${label}${sortIcon('residents',key)}</th>`;
+
+  if (isCurrent) {
+    document.getElementById('residentsHead').innerHTML = `<tr>
+      ${sortTh('ФИО','name')}${sortTh('Кровать','room')}
+      <th>Пансионат</th>${sortTh('Заезд','checkin')}
+      ${sortTh('Выезд план','checkout')}${sortTh('Осталось дн.','days')}
+      ${sortTh('Возраст','age')}${sortTh('Цена/сут','price')}<th></th>
+    </tr>`;
+  } else {
+    document.getElementById('residentsHead').innerHTML = `<tr>
+      ${sortTh('ФИО','name')}${sortTh('Заезд','checkin')}
+      ${sortTh('Выезд план','checkout')}<th>Выезд факт</th>
+      ${sortTh('Цена/сут','price')}${sortTh('Возраст','age')}
+    </tr>`;
+  }
+
+  if (!data.length) {
+    document.getElementById('residentsBody').innerHTML = emptyRow(isCurrent?9:6, isCurrent?'Нет текущих жильцов':'Архив пуст');
+    document.getElementById('residentsCount').textContent = '';
+    return;
+  }
+
+  document.getElementById('residentsBody').innerHTML = data.map(r => {
+    const age = calcAge(r.birth_date);
+    if (isCurrent) {
+      const bed  = Object.values(refs.beds).find(b=>b.current_resident_id===r.record_id);
+      const room = bed ? refs.rooms[bed.room_id] : null;
+      const p    = bed ? getPansionat(bed.room_id) : null;
+      const days = daysUntil(r.planned_check_out);
+      const overdue = days < 0;
+      const daysBadge = overdue
+        ? `<span class="badge bg-danger">Просрочен ${Math.abs(days)}д</span>`
+        : days <= 7
+          ? `<span class="badge bg-warning text-dark">${days}д</span>`
+          : `<span class="text-muted">${days}д</span>`;
+      return `<tr${overdue?' class="row-overdue"':''}>
+        <td class="fw-semibold">${r.last_name} ${r.first_name} ${r.middle_name}</td>
+        <td>${bed?bed.bed_label:'—'}</td>
+        <td>${p?.name||'—'}</td>
+        <td>${r.check_in_date}</td>
+        <td>${r.planned_check_out}</td>
+        <td>${daysBadge}</td>
+        <td>${age} лет</td>
+        <td>${r.check_in_price} ₽</td>
+        <td><button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="checkOut(${r.record_id},'${r.last_name} ${r.first_name}')">Выселить</button></td>
+      </tr>`;
+    }
+    return `<tr>
+      <td class="fw-semibold">${r.last_name} ${r.first_name} ${r.middle_name}</td>
+      <td>${r.check_in_date}</td>
+      <td>${r.planned_check_out}</td>
+      <td>${r.actual_check_out||'—'}</td>
+      <td>${r.check_in_price} ₽</td>
+      <td>${age} лет</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('residentsCount').textContent = `Показано: ${data.length} из ${allResidents.length}`;
+}
+
+async function loadResidents() {
+  allResidents = await apiFetch('GET',`/residents/?is_current=${showCurrentResidents}`).catch(e=>{notify(e.message,true);return[];});
+  renderResidents();
+}
+
+function switchResidents(cur) {
+  showCurrentResidents = cur;
+  sorts.residents = {key:null, dir:1};
+  document.getElementById('searchResidents').value = '';
+  document.getElementById('btnCurrent').classList.toggle('active', cur);
+  document.getElementById('btnArchive').classList.toggle('active', !cur);
+  loadResidents();
+}
+
+async function checkOut(id, name) {
+  if (!confirm(`Выселить ${name}?\nДата выезда зафиксируется сегодняшним числом.`)) return;
+  await apiFetch('POST',`/residents/${id}/check-out`).then(()=>{
+    loadResidents(); loadBeds(); notify(`${name} выселен(а)`);
+  }).catch(e=>notify(e.message,true));
+}
+
+function bkSortVal(b, key) {
+  const bed = refs.beds[b.bed_id];
+  const room = bed ? refs.rooms[bed.room_id] : null;
+  switch(key) {
+    case 'name':    return b.future_res_last_name+b.future_res_first_name;
+    case 'checkin': return b.planned_check_in;
+    case 'checkout':return b.planned_check_out;
+    case 'bed':     return bed?.bed_label||'';
+    case 'room':    return room?.room_number||'';
+    default: return null;
+  }
+}
+
+function renderBookings() {
+  const q = document.getElementById('searchBookings').value.toLowerCase();
+  let data = allBookings.filter(b => !q ||
+    (b.future_res_last_name+' '+b.future_res_first_name+' '+b.future_res_mid_name+' '+b.contact_phone).toLowerCase().includes(q));
+  data = sortedData(data, 'bookings', bkSortVal);
+  const visIds = data.map(b=>b.booking_id);
+  const allChecked = visIds.length>0 && visIds.every(id=>selected.bookings.has(id));
+  const sk = sorts.bookings.key;
+  const sortTh = (label, key) =>
+    `<th class="sortable${sk===key?' sorted':''}" onclick="toggleSort('bookings','${key}',renderBookings)">${label}${sortIcon('bookings',key)}</th>`;
+
+  document.getElementById('bookingsHead').innerHTML = `<tr>
+    <th><input type="checkbox" class="form-check-input" ${allChecked?'checked':''} onchange="toggleSelectAll('bookings',${JSON.stringify(visIds)},this.checked)"></th>
+    ${sortTh('ФИО','name')}${sortTh('Кровать','bed')}${sortTh('Комната','room')}
+    <th>Пансионат</th><th>Телефон</th>
+    ${sortTh('Заезд','checkin')}${sortTh('Выезд','checkout')}<th></th>
+  </tr>`;
+
+  if (!data.length) {
+    document.getElementById('bookingsBody').innerHTML = emptyRow(9, 'Нет бронирований');
+    document.getElementById('bookingsCount').textContent = '';
+    return;
+  }
+
+  document.getElementById('bookingsBody').innerHTML = data.map(b => {
+    const bed  = refs.beds[b.bed_id];
+    const room = bed ? refs.rooms[bed.room_id] : null;
+    const p    = bed ? getPansionat(bed.room_id) : null;
+    const chk  = selected.bookings.has(b.booking_id);
+    const days = daysUntil(b.planned_check_in);
+    const arrived = days <= 0;
+    const soon = !arrived && days <= 3 ? ' <span class="badge bg-warning text-dark small">скоро</span>' : '';
+    const arrivedBadge = arrived ? ' <span class="badge bg-success small">заехал</span>' : '';
+    return `<tr${arrived?' class="table-success"':''}>
+      <td><input type="checkbox" class="form-check-input" ${chk?'checked':''} onchange="toggleRowSelect('bookings',${b.booking_id})"></td>
+      <td class="fw-semibold">${b.future_res_last_name} ${b.future_res_first_name} ${b.future_res_mid_name}</td>
+      <td>${bed?.bed_label||'—'}</td>
+      <td>${room?.room_number||'—'}</td>
+      <td>${p?.name||'—'}</td>
+      <td class="small">${b.contact_phone}</td>
+      <td>${b.planned_check_in}${soon}${arrivedBadge}</td>
+      <td>${b.planned_check_out}</td>
+      <td class="text-nowrap">
+        ${arrived ? `<button class="btn btn-sm btn-success py-0 px-2 me-1" onclick="openCheckInFromBooking(${b.booking_id})">Заселить</button>` : ''}
+        <button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="cancelBooking(${b.booking_id},'${b.future_res_last_name}')">✕</button>
+      </td>
+    </tr>`;
+  }).join('');
+  document.getElementById('bookingsCount').textContent = `Показано: ${data.length} из ${allBookings.length}`;
 }
 
 async function loadBookings() {
-    const bookings = await api('GET', '/bookings/').catch(e => { notify(e.message, true); return []; });
-    document.getElementById('bookingsTable').innerHTML = bookings.map(b => `
-        <tr>
-            <td>${b.booking_id}</td>
-            <td>${b.bed_id}</td>
-            <td>${b.future_res_last_name} ${b.future_res_first_name}</td>
-            <td>${b.contact_phone}</td>
-            <td>${b.planned_check_in}</td>
-            <td>${b.planned_check_out}</td>
-            <td><button class="btn btn-sm btn-outline-danger" onclick="cancelBooking(${b.booking_id})">Отменить</button></td>
-        </tr>`).join('');
+  allBookings = await apiFetch('GET','/bookings/').catch(e=>{notify(e.message,true);return[];});
+  renderBookings();
 }
 
-async function cancelBooking(id) {
-    if (!confirm('Отменить бронирование?')) return;
-    await api('DELETE', `/bookings/${id}`).then(() => {
-        loadBookings();
-        notify('Бронирование отменено');
-    }).catch(e => notify(e.message, true));
+async function openBookingModal() {
+  await refreshRefs();
+  const sel = document.getElementById('selBedBooking');
+  sel.innerHTML = '<option value="">— выберите —</option>' +
+    allBeds.map(b=>{
+      const room = refs.rooms[b.room_id];
+      const p    = getPansionat(b.room_id);
+      const st   = b.current_resident_id?' [занята]':!b.is_active?' [ремонт]':' [свободна]';
+      return `<option value="${b.bed_id}">${b.bed_label} — Комн.${room?.room_number||'?'} — ${p?.name||'?'}${st}</option>`;
+    }).join('');
+  const tomorrow = new Date(Date.now()+86400000).toISOString().slice(0,10);
+  const monthOut = new Date(Date.now()+31*86400000).toISOString().slice(0,10);
+  document.getElementById('bkCheckin').value  = tomorrow;
+  document.getElementById('bkCheckout').value = monthOut;
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('mAddBooking')).show();
 }
 
 async function submitAddBooking() {
-    const data = readForm('formAddBooking');
-    data.bed_id = parseInt(data.bed_id);
-    await api('POST', '/bookings/', data).then(() => {
-        closeModal('modalAddBooking');
-        document.getElementById('formAddBooking').reset();
-        loadBookings();
-        notify('Бронирование создано');
-    }).catch(e => notify(e.message, true));
+  const data = readForm('fAddBooking');
+  data.bed_id = parseInt(data.bed_id);
+  if (!data.bed_id) { notify('Выберите кровать',true); return; }
+  await apiFetch('POST','/bookings/',data).then(()=>{
+    closeModal('mAddBooking'); document.getElementById('fAddBooking').reset();
+    loadBookings(); notify('Бронирование создано');
+  }).catch(e=>notify(e.message,true));
+}
+
+async function cancelBooking(id, name) {
+  if (!confirm(`Отменить бронирование для ${name}?`)) return;
+  await apiFetch('DELETE',`/bookings/${id}`).then(()=>{ loadBookings(); notify('Бронирование отменено'); }).catch(e=>notify(e.message,true));
+}
+
+function openCheckInFromBooking(bookingId) {
+  const b = allBookings.find(x => x.booking_id === bookingId);
+  if (!b) return;
+  activeBookingForCheckIn = b;
+  const bed  = refs.beds[b.bed_id];
+  const room = bed ? refs.rooms[bed.room_id] : null;
+  const p    = bed ? getPansionat(bed.room_id) : null;
+  const rt   = bed ? getRoomType(bed.room_id) : null;
+  document.getElementById('bkInfoDisplay').innerHTML = `
+    <div class="fw-semibold fs-6">${b.future_res_last_name} ${b.future_res_first_name} ${b.future_res_mid_name}</div>
+    <div class="text-muted small mt-1">
+      ${bed?.bed_label||'—'} · Комн. ${room?.room_number||'?'} · ${p?.name||'?'}<br>
+      Выезд: ${b.planned_check_out} · ${rt?.base_price||'?'} ₽/сутки
+    </div>`;
+  document.getElementById('fCheckInFromBooking').reset();
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('mCheckInFromBooking')).show();
+}
+
+async function submitCheckInFromBooking() {
+  if (!activeBookingForCheckIn) return;
+  const data = readForm('fCheckInFromBooking');
+  await apiFetch('POST', `/bookings/${activeBookingForCheckIn.booking_id}/check-in`, data)
+    .then(() => {
+      closeModal('mCheckInFromBooking');
+      activeBookingForCheckIn = null;
+      loadBookings();
+      loadBeds();
+      notify('Жилец заселён, бронирование закрыто');
+    })
+    .catch(e => notify(e.message, true));
+}
+
+async function bulkCancelBookings() {
+  const ids = [...selected.bookings];
+  if (!ids.length) return;
+  if (!confirm(`Отменить ${ids.length} бронирований?`)) return;
+  let ok = 0, fail = 0;
+  for (const id of ids) {
+    await apiFetch('DELETE',`/bookings/${id}`).then(()=>ok++).catch(()=>fail++);
+  }
+  selected.bookings.clear();
+  updateBulkBar('bookings');
+  await loadBookings();
+  notify(`Отменено: ${ok}${fail?`, ошибок: ${fail}`:''}`, fail > 0);
+}
+
+function renderRooms() {
+  const q = document.getElementById('searchRooms').value.toLowerCase();
+  const data = allRooms.filter(r => {
+    if (!q) return true;
+    const p  = refs.pansionats[r.pansionat_id];
+    const rt = refs.roomTypes[r.room_type_id];
+    return [r.room_number, p?.name||'', rt?.type_name||''].join(' ').toLowerCase().includes(q);
+  });
+  document.getElementById('roomsBody').innerHTML = data.length
+    ? data.map(r=>{
+        const p  = refs.pansionats[r.pansionat_id];
+        const rt = refs.roomTypes[r.room_type_id];
+        return `<tr><td>${r.room_number}</td><td>${p?.name||'—'}</td><td>${rt?.type_name||'—'}</td><td>${rt?.base_price||'—'} ₽</td>
+        <td><button class="btn btn-sm btn-outline-danger py-0 px-1" onclick="delRoom(${r.room_id})">✕</button></td></tr>`;
+      }).join('')
+    : emptyRow(5, 'Нет комнат');
 }
 
 async function loadReference() {
-    const [pansionats, roomTypes, rooms] = await Promise.all([
-        api('GET', '/pansionats/').catch(() => []),
-        api('GET', '/room-types/').catch(() => []),
-        api('GET', '/rooms/').catch(() => []),
-    ]);
-    document.getElementById('pansionatsTable').innerHTML = pansionats.map(p => `
-        <tr>
-            <td>${p.pansionat_id}</td><td>${p.name}</td><td>${p.address}</td>
-            <td><button class="btn btn-sm btn-outline-danger" onclick="api('DELETE','/pansionats/${p.pansionat_id}').then(loadReference).catch(e=>notify(e.message,true))">✕</button></td>
-        </tr>`).join('');
-    document.getElementById('roomTypesTable').innerHTML = roomTypes.map(t => `
-        <tr>
-            <td>${t.room_type_id}</td><td>${t.type_name}</td><td>${t.base_price} ₽</td>
-            <td><button class="btn btn-sm btn-outline-danger" onclick="api('DELETE','/room-types/${t.room_type_id}').then(loadReference).catch(e=>notify(e.message,true))">✕</button></td>
-        </tr>`).join('');
-    document.getElementById('roomsTable').innerHTML = rooms.map(r => `
-        <tr>
-            <td>${r.room_id}</td><td>${r.room_number}</td><td>${r.pansionat_id}</td><td>${r.room_type_id}</td>
-            <td><button class="btn btn-sm btn-outline-danger" onclick="api('DELETE','/rooms/${r.room_id}').then(loadReference).catch(e=>notify(e.message,true))">✕</button></td>
-        </tr>`).join('');
+  await refreshRefs();
+  const pansionats = Object.values(refs.pansionats);
+  const roomTypes  = Object.values(refs.roomTypes);
+  document.getElementById('pansionatsBody').innerHTML = pansionats.length
+    ? pansionats.map(p=>`<tr><td>${p.pansionat_id}</td><td>${p.name}</td><td>${p.address}</td>
+      <td><button class="btn btn-sm btn-outline-danger py-0 px-1" onclick="delPansionat(${p.pansionat_id})">✕</button></td></tr>`).join('')
+    : emptyRow(4,'Нет пансионатов');
+  document.getElementById('roomTypesBody').innerHTML = roomTypes.length
+    ? roomTypes.map(t=>`<tr><td>${t.room_type_id}</td><td>${t.type_name}</td><td>${t.base_price} ₽</td>
+      <td><button class="btn btn-sm btn-outline-danger py-0 px-1" onclick="delRoomType(${t.room_type_id})">✕</button></td></tr>`).join('')
+    : emptyRow(4,'Нет типов комнат');
+  document.getElementById('setupHint').style.display = pansionats.length && roomTypes.length && allRooms.length ? 'none' : '';
+  renderRooms();
 }
 
-async function submitAddPansionat() {
-    await api('POST', '/pansionats/', readForm('formAddPansionat')).then(() => {
-        closeModal('modalAddPansionat');
-        document.getElementById('formAddPansionat').reset();
-        loadReference();
-        notify('Пансионат добавлен');
-    }).catch(e => notify(e.message, true));
+async function openAddRoomModal() {
+  await refreshRefs();
+  document.getElementById('selPansionatRoom').innerHTML = '<option value="">—</option>' +
+    Object.values(refs.pansionats).map(p=>`<option value="${p.pansionat_id}">${p.name}</option>`).join('');
+  document.getElementById('selRoomTypeRoom').innerHTML = '<option value="">—</option>' +
+    Object.values(refs.roomTypes).map(t=>`<option value="${t.room_type_id}">${t.type_name} — ${t.base_price}₽</option>`).join('');
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('mAddRoom')).show();
 }
 
-async function submitAddRoomType() {
-    const data = readForm('formAddRoomType');
-    data.base_price = parseFloat(data.base_price);
-    await api('POST', '/room-types/', data).then(() => {
-        closeModal('modalAddRoomType');
-        document.getElementById('formAddRoomType').reset();
-        loadReference();
-        notify('Тип комнаты добавлен');
-    }).catch(e => notify(e.message, true));
+async function submitPansionat() {
+  await apiFetch('POST','/pansionats/',readForm('fAddPansionat')).then(()=>{
+    closeModal('mAddPansionat'); document.getElementById('fAddPansionat').reset();
+    loadReference(); notify('Пансионат добавлен');
+  }).catch(e=>notify(e.message,true));
 }
 
-async function submitAddRoom() {
-    const data = readForm('formAddRoom');
-    data.pansionat_id = parseInt(data.pansionat_id);
-    data.room_type_id = parseInt(data.room_type_id);
-    await api('POST', '/rooms/', data).then(() => {
-        closeModal('modalAddRoom');
-        document.getElementById('formAddRoom').reset();
-        loadReference();
-        notify('Комната добавлена');
-    }).catch(e => notify(e.message, true));
+async function delPansionat(id) {
+  if (!confirm('Удалить пансионат?')) return;
+  await apiFetch('DELETE',`/pansionats/${id}`).then(()=>{loadReference();notify('Удалён');}).catch(e=>notify(e.message,true));
+}
+
+async function submitRoomType() {
+  const data = readForm('fAddRoomType');
+  data.base_price = parseFloat(data.base_price);
+  await apiFetch('POST','/room-types/',data).then(()=>{
+    closeModal('mAddRoomType'); document.getElementById('fAddRoomType').reset();
+    loadReference(); notify('Тип комнаты добавлен');
+  }).catch(e=>notify(e.message,true));
+}
+
+async function delRoomType(id) {
+  if (!confirm('Удалить тип комнаты?')) return;
+  await apiFetch('DELETE',`/room-types/${id}`).then(()=>{loadReference();notify('Удалён');}).catch(e=>notify(e.message,true));
+}
+
+async function submitRoom() {
+  const data = readForm('fAddRoom');
+  data.pansionat_id = parseInt(data.pansionat_id);
+  data.room_type_id = parseInt(data.room_type_id);
+  if (!data.pansionat_id||!data.room_type_id) { notify('Выберите пансионат и тип',true); return; }
+  await apiFetch('POST','/rooms/',data).then(()=>{
+    closeModal('mAddRoom'); document.getElementById('fAddRoom').reset();
+    loadReference(); notify('Комната добавлена');
+  }).catch(e=>notify(e.message,true));
+}
+
+async function delRoom(id) {
+  if (!confirm('Удалить комнату?')) return;
+  await apiFetch('DELETE',`/rooms/${id}`).then(()=>{loadReference();notify('Удалена');}).catch(e=>notify(e.message,true));
 }
 
 document.getElementById('mainTabs').addEventListener('shown.bs.tab', e => {
-    const t = e.target.getAttribute('data-bs-target');
-    if (t === '#tab-beds') loadBeds();
-    else if (t === '#tab-residents') loadResidents(true);
-    else if (t === '#tab-bookings') loadBookings();
-    else if (t === '#tab-reference') loadReference();
+  const t = e.target.getAttribute('data-bs-target');
+  if (t === '#tab-beds') loadBeds();
+  else if (t === '#tab-residents') { refreshRefs().then(loadResidents); }
+  else if (t === '#tab-bookings')  { refreshRefs().then(loadBookings);  }
+  else if (t === '#tab-ref')       { loadReference(); }
 });
 
-loadBeds();
+refreshRefs().then(() => { updateStats(); populatePansionatFilter(); renderBeds(); });
 </script>
 </body>
 </html>

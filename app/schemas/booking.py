@@ -17,3 +17,9 @@ class BookingResponse(BookingCreate):
     booking_id: int
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class BookingCheckIn(BaseModel):
+    passport_series: str
+    passport_number: str
+    birth_date: datetime.date

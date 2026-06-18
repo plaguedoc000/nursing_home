@@ -2,10 +2,12 @@ import datetime
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.bed import Bed
+from app.models.booking import Booking
 from app.models.resident import Resident
 from app.models.room import Room
 from app.models.room_type import RoomType
@@ -39,8 +41,21 @@ def check_in(data: ResidentCheckIn, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Bed is under repair")
     if bed.current_resident_id is not None:
         raise HTTPException(status_code=400, detail="Bed is already occupied")
-    if data.planned_check_out <= datetime.date.today():
+    # if data.planned_check_out <= datetime.date.today():
+    #     raise HTTPException(status_code=400, detail="Planned check-out must be in the future")
+    if data.planned_check_out < datetime.date.today():
         raise HTTPException(status_code=400, detail="Planned check-out must be in the future")
+
+    # проверяем нет ли активных броней на это место
+    overlap_booking = db.execute(
+        select(Booking).where(
+            Booking.bed_id == data.bed_id,
+            Booking.planned_check_in < data.planned_check_out,
+            Booking.planned_check_out > datetime.date.today(),
+        )
+    ).scalar_one_or_none()
+    if overlap_booking is not None:
+        raise HTTPException(status_code=400, detail="Bed has an active booking for these dates")
 
     room = db.get(Room, bed.room_id)
     room_type = db.get(RoomType, room.room_type_id)
@@ -54,18 +69,25 @@ def check_in(data: ResidentCheckIn, db: Session = Depends(get_db)):
         birth_date=data.birth_date,
         check_in_date=datetime.date.today(),
         planned_check_out=data.planned_check_out,
+        # цена фиксируется на момент заселения, не меняется при изменении тарифа
         check_in_price=room_type.base_price,
         is_current=True,
     )
     db.add(resident)
-    db.flush()
-
-    bed.current_resident_id = resident.record_id
-    db.commit()
+    try:
+        # flush чтобы получить record_id до commit
+        db.flush()
+        bed.current_resident_id = resident.record_id
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="Bed was just occupied by someone else")
     db.refresh(resident)
     return resident
 
 
+# TODO: может стоит хранить bed_id прямо в таблице residents?
+# сейчас при checkout ищем кровать обратным запросом по current_resident_id
 @router.post("/{record_id}/check-out", response_model=ResidentResponse)
 def check_out(record_id: int, db: Session = Depends(get_db)):
     resident = db.get(Resident, record_id)
@@ -77,6 +99,7 @@ def check_out(record_id: int, db: Session = Depends(get_db)):
     resident.is_current = False
     resident.actual_check_out = datetime.date.today()
 
+    # ищем кровать по жильцу и освобождаем
     bed = db.execute(
         select(Bed).where(Bed.current_resident_id == record_id)
     ).scalar_one_or_none()

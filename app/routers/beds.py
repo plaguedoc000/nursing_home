@@ -26,6 +26,8 @@ def get_one(bed_id: int, db: Session = Depends(get_db)):
 
 @router.post("/", response_model=BedResponse, status_code=201)
 def create(data: BedCreate, db: Session = Depends(get_db)):
+    # if db.get(Room, data.room_id) is None:
+    #     raise HTTPException(status_code=500, detail="Internal server error")
     if db.get(Room, data.room_id) is None:
         raise HTTPException(status_code=404, detail="Room not found")
     bed = Bed(**data.model_dump())

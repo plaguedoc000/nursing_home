@@ -25,6 +25,7 @@ def get_one(room_type_id: int, db: Session = Depends(get_db)):
 
 @router.post("/", response_model=RoomTypeResponse, status_code=201)
 def create(data: RoomTypeCreate, db: Session = Depends(get_db)):
+    # TODO: валидировать что цена > 0 (сейчас можно передать отрицательную)
     room_type = RoomType(**data.model_dump())
     db.add(room_type)
     db.commit()

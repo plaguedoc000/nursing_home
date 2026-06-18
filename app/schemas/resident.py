@@ -4,6 +4,7 @@ from decimal import Decimal
 from pydantic import BaseModel, ConfigDict
 
 
+# TODO: добавить валидацию паспорта (серия - 4 цифры, номер - 6 цифр)
 class ResidentCheckIn(BaseModel):
     bed_id: int
     last_name: str

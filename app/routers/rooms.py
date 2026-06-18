@@ -27,6 +27,7 @@ def get_one(room_id: int, db: Session = Depends(get_db)):
 
 @router.post("/", response_model=RoomResponse, status_code=201)
 def create(data: RoomCreate, db: Session = Depends(get_db)):
+    # проверяем что пансионат и тип комнаты существуют, иначе будет 500
     if db.get(Pansionat, data.pansionat_id) is None:
         raise HTTPException(status_code=404, detail="Pansionat not found")
     if db.get(RoomType, data.room_type_id) is None:
@@ -43,6 +44,11 @@ def update(room_id: int, data: RoomCreate, db: Session = Depends(get_db)):
     room = db.get(Room, room_id)
     if room is None:
         raise HTTPException(status_code=404, detail="Room not found")
+    # тоже проверяем FK при обновлении, не только при создании
+    if db.get(Pansionat, data.pansionat_id) is None:
+        raise HTTPException(status_code=404, detail="Pansionat not found")
+    if db.get(RoomType, data.room_type_id) is None:
+        raise HTTPException(status_code=404, detail="Room type not found")
     for field, value in data.model_dump().items():
         setattr(room, field, value)
     db.commit()
