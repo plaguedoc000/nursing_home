@@ -35,3 +35,13 @@ class ResidentResponse(BaseModel):
 
 class ResidentExtend(BaseModel):
     planned_check_out: datetime.date
+
+
+class ResidentUpdate(BaseModel):
+    last_name: str
+    first_name: str
+    middle_name: str
+    passport_series: str
+    passport_number: str
+    birth_date: datetime.date
+    planned_check_out: datetime.date

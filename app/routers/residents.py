@@ -11,7 +11,7 @@ from app.models.booking import Booking
 from app.models.resident import Resident
 from app.models.room import Room
 from app.models.room_type import RoomType
-from app.schemas.resident import ResidentCheckIn, ResidentExtend, ResidentResponse
+from app.schemas.resident import ResidentCheckIn, ResidentExtend, ResidentResponse, ResidentUpdate
 
 router = APIRouter(prefix="/residents", tags=["residents"])
 
@@ -82,6 +82,20 @@ def check_in(data: ResidentCheckIn, db: Session = Depends(get_db)):
     except IntegrityError:
         db.rollback()
         raise HTTPException(status_code=409, detail="Bed was just occupied by someone else")
+    db.refresh(resident)
+    return resident
+
+
+@router.put("/{record_id}", response_model=ResidentResponse)
+def update(record_id: int, data: ResidentUpdate, db: Session = Depends(get_db)):
+    resident = db.get(Resident, record_id)
+    if resident is None:
+        raise HTTPException(status_code=404, detail="Resident not found")
+    if not resident.is_current:
+        raise HTTPException(status_code=400, detail="Resident has already checked out")
+    for field, value in data.model_dump().items():
+        setattr(resident, field, value)
+    db.commit()
     db.refresh(resident)
     return resident
 

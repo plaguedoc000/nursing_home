@@ -253,8 +253,8 @@ th.sorted .sort-icon { opacity:1; color:#0d6efd }
         <div class="col-4"><label class="form-label">Фамилия</label><input type="text" class="form-control" name="last_name" required></div>
         <div class="col-4"><label class="form-label">Имя</label><input type="text" class="form-control" name="first_name" required></div>
         <div class="col-4"><label class="form-label">Отчество</label><input type="text" class="form-control" name="middle_name" required></div>
-        <div class="col-6"><label class="form-label">Серия паспорта</label><input type="text" class="form-control" name="passport_series" placeholder="4521" required></div>
-        <div class="col-6"><label class="form-label">Номер паспорта</label><input type="text" class="form-control" name="passport_number" placeholder="123456" required></div>
+        <div class="col-6"><label class="form-label">Серия паспорта</label><input type="text" class="form-control" name="passport_series" placeholder="4521" pattern="\d{4}" title="4 цифры" required></div>
+        <div class="col-6"><label class="form-label">Номер паспорта</label><input type="text" class="form-control" name="passport_number" placeholder="123456" pattern="\d{6}" title="6 цифр" required></div>
         <div class="col-6"><label class="form-label">Дата рождения</label><input type="date" class="form-control" name="birth_date" required></div>
         <div class="col-6"><label class="form-label">Плановый выезд</label><input type="date" class="form-control" id="ciCheckout" name="planned_check_out" required></div>
       </div>
@@ -266,19 +266,25 @@ th.sorted .sort-icon { opacity:1; color:#0d6efd }
   </div>
 </div></div></div>
 
-<!-- Продление проживания -->
-<div class="modal fade" id="mExtendStay" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
-  <div class="modal-header"><h5 class="modal-title">Продление проживания</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+<!-- Редактирование жильца -->
+<div class="modal fade" id="mEditResident" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
+  <div class="modal-header"><h5 class="modal-title">Редактирование жильца</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
   <div class="modal-body">
-    <p class="fw-semibold mb-3" id="extendResidentName"></p>
-    <div class="mb-3">
-      <label class="form-label">Новая дата выезда</label>
-      <input type="date" class="form-control" id="extendDate">
-    </div>
+    <form id="fEditResident">
+      <div class="row g-2">
+        <div class="col-4"><label class="form-label">Фамилия</label><input type="text" class="form-control" name="last_name" required></div>
+        <div class="col-4"><label class="form-label">Имя</label><input type="text" class="form-control" name="first_name" required></div>
+        <div class="col-4"><label class="form-label">Отчество</label><input type="text" class="form-control" name="middle_name" required></div>
+        <div class="col-6"><label class="form-label">Серия паспорта</label><input type="text" class="form-control" name="passport_series" placeholder="4521" pattern="\d{4}" title="4 цифры" required></div>
+        <div class="col-6"><label class="form-label">Номер паспорта</label><input type="text" class="form-control" name="passport_number" placeholder="123456" pattern="\d{6}" title="6 цифр" required></div>
+        <div class="col-6"><label class="form-label">Дата рождения</label><input type="date" class="form-control" name="birth_date" required></div>
+        <div class="col-6"><label class="form-label">Плановый выезд</label><input type="date" class="form-control" name="planned_check_out" required></div>
+      </div>
+    </form>
   </div>
   <div class="modal-footer">
     <button class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-    <button class="btn btn-primary" onclick="submitExtendStay()">Сохранить</button>
+    <button class="btn btn-primary" onclick="submitEditResident()">Сохранить</button>
   </div>
 </div></div></div>
 
@@ -370,7 +376,7 @@ const refs = {pansionats:{}, roomTypes:{}, rooms:{}, beds:{}, residents:{}};
 let allBeds = [], allResidents = [], allBookings = [], allRooms = [];
 let showCurrentResidents = true;
 let activeBookingForCheckIn = null;
-let extendingResidentId = null;
+let editingResidentId = null;
 let lastVisibleBedIds = [];
 let lastVisibleBookingIds = [];
 
@@ -387,7 +393,16 @@ async function apiFetch(method, path, body) {
   const res = await fetch(path, opts);
   if (!res.ok) {
     const e = await res.json().catch(() => ({detail:'Ошибка сервера'}));
-    throw new Error(tr(e.detail||'Неизвестная ошибка'));
+    let msg;
+    if (typeof e.detail === 'string') {
+      msg = tr(e.detail);
+    } else if (Array.isArray(e.detail)) {
+      // Pydantic validation error — detail это массив объектов
+      msg = e.detail.map(d => d.msg || JSON.stringify(d)).join('; ');
+    } else {
+      msg = 'Ошибка сервера';
+    }
+    throw new Error(msg);
   }
   if (res.status === 204) return null;
   return res.json();
@@ -737,28 +752,30 @@ async function submitCheckIn() {
   }).catch(e=>notify(e.message,true));
 }
 
-function openExtendStay(id) {
+function openEditResident(id) {
   const r = allResidents.find(x => x.record_id === id);
   if (!r) return;
-  extendingResidentId = id;
-  document.getElementById('extendResidentName').textContent = `${r.last_name} ${r.first_name} ${r.middle_name}`;
-  const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
-  const input = document.getElementById('extendDate');
-  input.min = tomorrow;
-  input.value = r.planned_check_out > tomorrow ? r.planned_check_out : tomorrow;
-  bootstrap.Modal.getOrCreateInstance(document.getElementById('mExtendStay')).show();
+  editingResidentId = id;
+  const f = document.getElementById('fEditResident');
+  f.querySelector('[name=last_name]').value       = r.last_name;
+  f.querySelector('[name=first_name]').value      = r.first_name;
+  f.querySelector('[name=middle_name]').value     = r.middle_name;
+  f.querySelector('[name=passport_series]').value = r.passport_series;
+  f.querySelector('[name=passport_number]').value = r.passport_number;
+  f.querySelector('[name=birth_date]').value      = r.birth_date;
+  f.querySelector('[name=planned_check_out]').value = r.planned_check_out;
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('mEditResident')).show();
 }
 
-async function submitExtendStay() {
-  if (!extendingResidentId) return;
-  const date = document.getElementById('extendDate').value;
-  if (!date) { notify('Укажите новую дату выезда', true); return; }
-  await apiFetch('PATCH', `/residents/${extendingResidentId}/extend`, {planned_check_out: date})
+async function submitEditResident() {
+  if (!editingResidentId) return;
+  const data = readForm('fEditResident');
+  await apiFetch('PUT', `/residents/${editingResidentId}`, data)
     .then(() => {
-      closeModal('mExtendStay');
-      extendingResidentId = null;
+      closeModal('mEditResident');
+      editingResidentId = null;
       loadResidents();
-      notify('Дата выезда обновлена');
+      notify('Данные жильца обновлены');
     })
     .catch(e => notify(e.message, true));
 }
@@ -833,7 +850,7 @@ function renderResidents() {
         <td>${ageStr(age)}</td>
         <td>${r.check_in_price} ₽</td>
         <td class="text-nowrap">
-          <button class="btn btn-sm btn-outline-primary py-0 px-2 me-1" onclick="openExtendStay(${r.record_id})">Продлить</button>
+          <button class="btn btn-sm btn-outline-primary py-0 px-2 me-1" onclick="openEditResident(${r.record_id})">Изменить</button>
           <button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="checkOut(${r.record_id})">Выселить</button>
         </td>
       </tr>`;
