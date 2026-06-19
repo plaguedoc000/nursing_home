@@ -115,7 +115,5 @@ def delete(booking_id: int, db: Session = Depends(get_db)):
     booking = db.get(Booking, booking_id)
     if booking is None:
         raise HTTPException(status_code=404, detail="Booking not found")
-    if booking.planned_check_in <= datetime.date.today():
-        raise HTTPException(status_code=400, detail="Cannot cancel a booking after check-in date")
     db.delete(booking)
     db.commit()

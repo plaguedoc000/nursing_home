@@ -31,3 +31,7 @@ class ResidentResponse(BaseModel):
     is_current: bool
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class ResidentExtend(BaseModel):
+    planned_check_out: datetime.date

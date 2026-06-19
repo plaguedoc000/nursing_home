@@ -28,24 +28,29 @@ th.sorted .sort-icon { opacity:1; color:#0d6efd }
 <div class="container mt-3">
 
   <div class="row g-3 mb-3">
-    <div class="col-6 col-md-3">
+    <div class="col-6 col-md">
       <div class="card border-primary text-center py-2">
         <div class="fw-bold fs-4" id="sTot">—</div><div class="text-muted small">Всего мест</div>
       </div>
     </div>
-    <div class="col-6 col-md-3">
+    <div class="col-6 col-md">
       <div class="card border-success text-center py-2">
         <div class="fw-bold fs-4 text-success" id="sFree">—</div><div class="text-muted small">Свободных</div>
       </div>
     </div>
-    <div class="col-6 col-md-3">
+    <div class="col-6 col-md">
       <div class="card border-danger text-center py-2">
         <div class="fw-bold fs-4 text-danger" id="sOcc">—</div><div class="text-muted small">Занятых</div>
       </div>
     </div>
-    <div class="col-6 col-md-3">
+    <div class="col-6 col-md">
       <div class="card border-warning text-center py-2">
         <div class="fw-bold fs-4 text-warning" id="sRep">—</div><div class="text-muted small">На ремонте</div>
+      </div>
+    </div>
+    <div class="col-12 col-md">
+      <div class="card text-center py-2" id="sOverdueCard">
+        <div class="fw-bold fs-4" id="sOverdue">—</div><div class="text-muted small">Просрочили выезд</div>
       </div>
     </div>
   </div>
@@ -184,6 +189,17 @@ th.sorted .sort-icon { opacity:1; color:#0d6efd }
   </div>
 </div>
 
+<!-- toast -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index:1100">
+  <div id="toast" class="toast align-items-center border-0 text-white" role="alert">
+    <div class="d-flex">
+      <div class="toast-body fw-semibold" id="toastBody"></div>
+      <button class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>
+  </div>
+</div>
+
+<!-- Заселение по бронированию -->
 <div class="modal fade" id="mCheckInFromBooking" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
   <div class="modal-header"><h5 class="modal-title">Заселение по бронированию</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
   <div class="modal-body">
@@ -202,15 +218,7 @@ th.sorted .sort-icon { opacity:1; color:#0d6efd }
   </div>
 </div></div></div>
 
-<div class="position-fixed bottom-0 end-0 p-3" style="z-index:1100">
-  <div id="toast" class="toast align-items-center border-0 text-white" role="alert">
-    <div class="d-flex">
-      <div class="toast-body fw-semibold" id="toastBody"></div>
-      <button class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-    </div>
-  </div>
-</div>
-
+<!-- Новое место -->
 <div class="modal fade" id="mAddBed" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
   <div class="modal-header"><h5 class="modal-title">Новое место</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
   <div class="modal-body">
@@ -230,6 +238,7 @@ th.sorted .sort-icon { opacity:1; color:#0d6efd }
   </div>
 </div></div></div>
 
+<!-- Заселение жильца -->
 <div class="modal fade" id="mCheckIn" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
   <div class="modal-header"><h5 class="modal-title">Заселение жильца</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
   <div class="modal-body">
@@ -257,12 +266,30 @@ th.sorted .sort-icon { opacity:1; color:#0d6efd }
   </div>
 </div></div></div>
 
+<!-- Продление проживания -->
+<div class="modal fade" id="mExtendStay" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+  <div class="modal-header"><h5 class="modal-title">Продление проживания</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+  <div class="modal-body">
+    <p class="fw-semibold mb-3" id="extendResidentName"></p>
+    <div class="mb-3">
+      <label class="form-label">Новая дата выезда</label>
+      <input type="date" class="form-control" id="extendDate">
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+    <button class="btn btn-primary" onclick="submitExtendStay()">Сохранить</button>
+  </div>
+</div></div></div>
+
+<!-- Новое бронирование -->
 <div class="modal fade" id="mAddBooking" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
   <div class="modal-header"><h5 class="modal-title">Новое бронирование</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
   <div class="modal-body">
     <form id="fAddBooking">
       <div class="mb-3"><label class="form-label fw-semibold">Спальное место</label>
         <select class="form-select" id="selBedBooking" name="bed_id" required><option value="">— выберите —</option></select>
+        <div class="form-text text-muted">Места на ремонте не отображаются</div>
       </div>
       <hr>
       <div class="row g-2">
@@ -281,6 +308,7 @@ th.sorted .sort-icon { opacity:1; color:#0d6efd }
   </div>
 </div></div></div>
 
+<!-- Новый пансионат -->
 <div class="modal fade" id="mAddPansionat" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
   <div class="modal-header"><h5 class="modal-title">Новый пансионат</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
   <div class="modal-body"><form id="fAddPansionat">
@@ -290,6 +318,7 @@ th.sorted .sort-icon { opacity:1; color:#0d6efd }
   <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button><button class="btn btn-primary" onclick="submitPansionat()">Создать</button></div>
 </div></div></div>
 
+<!-- Новый тип комнаты -->
 <div class="modal fade" id="mAddRoomType" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
   <div class="modal-header"><h5 class="modal-title">Новый тип комнаты</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
   <div class="modal-body"><form id="fAddRoomType">
@@ -299,6 +328,7 @@ th.sorted .sort-icon { opacity:1; color:#0d6efd }
   <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button><button class="btn btn-primary" onclick="submitRoomType()">Создать</button></div>
 </div></div></div>
 
+<!-- Новая комната -->
 <div class="modal fade" id="mAddRoom" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
   <div class="modal-header"><h5 class="modal-title">Новая комната</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
   <div class="modal-body"><form id="fAddRoom">
@@ -329,18 +359,20 @@ const ERR = {
   'Booking not found':'Бронирование не найдено',
   'Check-in date must be before check-out date':'Дата заезда должна быть раньше даты выезда',
   'Planned check-out must be in the future':'Дата выезда должна быть в будущем',
+  'New check-out date must be in the future':'Новая дата выезда должна быть в будущем',
   'Bed is occupied during these dates':'Кровать занята в эти даты',
-  'Cannot cancel a booking after check-in date':'Нельзя отменить бронь: дата заезда уже наступила',
   'Bed has an active booking for these dates':'На это место есть активное бронирование',
   'Bed was just occupied by someone else':'Место только что занял другой жилец — попробуйте снова',
 };
 function tr(msg) { return ERR[msg] || msg; }
 
-const refs = {pansionats:{}, roomTypes:{}, rooms:{}, beds:{}};
+const refs = {pansionats:{}, roomTypes:{}, rooms:{}, beds:{}, residents:{}};
 let allBeds = [], allResidents = [], allBookings = [], allRooms = [];
 let showCurrentResidents = true;
-
 let activeBookingForCheckIn = null;
+let extendingResidentId = null;
+let lastVisibleBedIds = [];
+let lastVisibleBookingIds = [];
 
 const sorts = {
   beds: {key:null, dir:1},
@@ -383,8 +415,28 @@ function emptyRow(cols, msg) {
   return `<tr><td colspan="${cols}" class="text-center text-muted py-4">${msg}</td></tr>`;
 }
 
+// Правильное сравнение дат — без UTC-смещения
 function daysUntil(dateStr) {
-  return Math.ceil((new Date(dateStr) - new Date()) / 86400000);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const d = new Date(dateStr + 'T00:00:00');
+  return Math.round((d - today) / 86400000);
+}
+
+function fmtDate(s) {
+  if (!s) return '—';
+  const [y, m, d] = s.split('-');
+  return `${d}.${m}.${y}`;
+}
+
+function ageStr(age) {
+  const n = age % 100;
+  if (n >= 11 && n <= 19) return `${age} лет`;
+  switch (age % 10) {
+    case 1: return `${age} год`;
+    case 2: case 3: case 4: return `${age} года`;
+    default: return `${age} лет`;
+  }
 }
 
 function calcAge(dob) {
@@ -440,24 +492,26 @@ function toggleRowSelect(table, id) {
 
 function toggleSelectAll(table, visibleIds, checked) {
   if (checked) visibleIds.forEach(id => selected[table].add(id));
-  else selected[table].clear();
+  else visibleIds.forEach(id => selected[table].delete(id));
   updateBulkBar(table);
   if (table === 'beds') renderBeds();
   else if (table === 'bookings') renderBookings();
 }
 
 async function refreshRefs() {
-  const [p, rt, r, b] = await Promise.all([
+  const [p, rt, r, b, cur] = await Promise.all([
     apiFetch('GET','/pansionats/').catch(()=>[]),
     apiFetch('GET','/room-types/').catch(()=>[]),
     apiFetch('GET','/rooms/').catch(()=>[]),
     apiFetch('GET','/beds/').catch(()=>[]),
+    apiFetch('GET','/residents/?is_current=true').catch(()=>[]),
   ]);
-  [refs.pansionats, refs.roomTypes, refs.rooms, refs.beds].forEach(o => Object.keys(o).forEach(k=>delete o[k]));
+  [refs.pansionats, refs.roomTypes, refs.rooms, refs.beds, refs.residents].forEach(o => Object.keys(o).forEach(k=>delete o[k]));
   p.forEach(x=>refs.pansionats[x.pansionat_id]=x);
   rt.forEach(x=>refs.roomTypes[x.room_type_id]=x);
   r.forEach(x=>refs.rooms[x.room_id]=x);
   b.forEach(x=>refs.beds[x.bed_id]=x);
+  cur.forEach(x=>refs.residents[x.record_id]=x);
   allRooms = r;
   allBeds = b;
 }
@@ -467,13 +521,25 @@ function getRoomType(roomId)  { const room=refs.rooms[roomId]; return room?refs.
 
 function updateStats() {
   const total = allBeds.length;
-  const free = allBeds.filter(b=>b.is_active&&b.current_resident_id===null).length;
-  const occ  = allBeds.filter(b=>b.current_resident_id!==null).length;
-  const rep  = allBeds.filter(b=>!b.is_active).length;
-  document.getElementById('sTot').textContent = total;
+  // взаимоисключающие категории
+  const free  = allBeds.filter(b => b.is_active && b.current_resident_id === null).length;
+  const occ   = allBeds.filter(b => b.is_active && b.current_resident_id !== null).length;
+  const rep   = allBeds.filter(b => !b.is_active).length;
+  const overdue = Object.values(refs.residents).filter(r => daysUntil(r.planned_check_out) < 0).length;
+  document.getElementById('sTot').textContent  = total;
   document.getElementById('sFree').textContent = free;
   document.getElementById('sOcc').textContent  = occ;
   document.getElementById('sRep').textContent  = rep;
+  document.getElementById('sOverdue').textContent = overdue;
+  const overdueCard = document.getElementById('sOverdueCard');
+  const overdueNum  = document.getElementById('sOverdue');
+  if (overdue > 0) {
+    overdueCard.className = 'card border-danger text-center py-2';
+    overdueNum.className  = 'fw-bold fs-4 text-danger';
+  } else {
+    overdueCard.className = 'card border-success text-center py-2';
+    overdueNum.className  = 'fw-bold fs-4 text-success';
+  }
 }
 
 function populatePansionatFilter() {
@@ -504,18 +570,22 @@ function renderBeds() {
   let data = allBeds.filter(b => {
     const room = refs.rooms[b.room_id];
     const p    = getPansionat(b.room_id);
-    if (q && ![b.bed_label, room?.room_number||'', p?.name||''].join(' ').toLowerCase().includes(q)) return false;
-    if (status === 'free'     && !(b.is_active && b.current_resident_id===null)) return false;
-    if (status === 'occupied' && b.current_resident_id===null) return false;
+    const resident = b.current_resident_id ? refs.residents[b.current_resident_id] : null;
+    const resName = resident ? `${resident.last_name} ${resident.first_name}` : '';
+    if (q && ![b.bed_label, room?.room_number||'', p?.name||'', resName].join(' ').toLowerCase().includes(q)) return false;
+    // статус: взаимоисключающие категории
+    if (status === 'free'     && !(b.is_active && b.current_resident_id === null)) return false;
+    if (status === 'occupied' && !(b.is_active && b.current_resident_id !== null)) return false;
     if (status === 'repair'   && b.is_active) return false;
     if (panId && p?.pansionat_id !== panId) return false;
     return true;
   });
 
   data = sortedData(data, 'beds', bedSortVal);
-  const visIds = data.map(b=>b.bed_id);
+  const visIds = data.map(b => b.bed_id);
+  lastVisibleBedIds = visIds;
 
-  const allChecked = visIds.length > 0 && visIds.every(id=>selected.beds.has(id));
+  const allChecked = visIds.length > 0 && visIds.every(id => selected.beds.has(id));
   const sk = sorts.beds.key;
   document.getElementById('bedsHead').innerHTML = `<tr>
     <th><input type="checkbox" class="form-check-input" ${allChecked?'checked':''} onchange="toggleSelectAll('beds',${JSON.stringify(visIds)},this.checked)"></th>
@@ -534,17 +604,21 @@ function renderBeds() {
   }
 
   document.getElementById('bedsBody').innerHTML = data.map(b => {
-    const isFree  = b.is_active && b.current_resident_id===null;
-    const rowCls  = !b.is_active ? 'row-repair' : b.current_resident_id ? 'row-occupied' : 'row-free';
-    const badge   = !b.is_active
+    const isFree   = b.is_active && b.current_resident_id === null;
+    const rowCls   = !b.is_active ? 'row-repair' : b.current_resident_id ? 'row-occupied' : 'row-free';
+    const badge    = !b.is_active
       ? '<span class="badge bg-warning text-dark">Ремонт</span>'
       : b.current_resident_id
         ? '<span class="badge bg-danger">Занята</span>'
         : '<span class="badge bg-success">Свободна</span>';
-    const room = refs.rooms[b.room_id];
-    const p    = getPansionat(b.room_id);
-    const rt   = getRoomType(b.room_id);
-    const chk  = selected.beds.has(b.bed_id);
+    const room     = refs.rooms[b.room_id];
+    const p        = getPansionat(b.room_id);
+    const rt       = getRoomType(b.room_id);
+    const resident = b.current_resident_id ? refs.residents[b.current_resident_id] : null;
+    const resCell  = resident
+      ? `<span class="fw-semibold">${resident.last_name} ${resident.first_name[0]}.</span>`
+      : '<span class="text-muted">—</span>';
+    const chk = selected.beds.has(b.bed_id);
     return `<tr class="${rowCls}">
       <td><input type="checkbox" class="form-check-input" ${chk?'checked':''} onchange="toggleRowSelect('beds',${b.bed_id}); this.closest('tr').classList.toggle('table-active',this.checked)"></td>
       <td class="fw-semibold">${b.bed_label}</td>
@@ -552,9 +626,9 @@ function renderBeds() {
       <td>${p?.name||'—'}</td>
       <td class="text-muted small">${rt?.type_name||'—'}</td>
       <td>${badge}</td>
-      <td>${b.current_resident_id?`<span class="text-danger small">Занята</span>`:'<span class="text-muted">—</span>'}</td>
+      <td>${resCell}</td>
       <td class="text-nowrap">
-        ${isFree?`<button class="btn btn-xs btn-success btn-sm me-1 py-0 px-2" onclick="openCheckIn(${b.bed_id})">Заселить</button>`:''}
+        ${isFree?`<button class="btn btn-sm btn-success py-0 px-2 me-1" onclick="openCheckIn(${b.bed_id})">Заселить</button>`:''}
         <button class="btn btn-sm btn-outline-secondary py-0 px-2 me-1" onclick="toggleBed(${b.bed_id},${b.is_active})">
           ${b.is_active?'На ремонт':'В работу'}
         </button>
@@ -583,14 +657,15 @@ async function deleteBed(id) {
 }
 
 async function bulkDeleteBeds() {
-  const ids = [...selected.beds];
+  // удаляем только те, что видны на экране сейчас
+  const ids = [...selected.beds].filter(id => lastVisibleBedIds.includes(id));
   if (!ids.length) return;
   if (!confirm(`Удалить ${ids.length} мест? Это нельзя отменить.`)) return;
   let ok = 0, fail = 0;
   for (const id of ids) {
     await apiFetch('DELETE',`/beds/${id}`).then(()=>ok++).catch(()=>fail++);
   }
-  selected.beds.clear();
+  ids.forEach(id => selected.beds.delete(id));
   updateBulkBar('beds');
   await loadBeds();
   notify(`Удалено: ${ok}${fail?`, ошибок: ${fail}`:''}`, fail > 0);
@@ -662,6 +737,32 @@ async function submitCheckIn() {
   }).catch(e=>notify(e.message,true));
 }
 
+function openExtendStay(id) {
+  const r = allResidents.find(x => x.record_id === id);
+  if (!r) return;
+  extendingResidentId = id;
+  document.getElementById('extendResidentName').textContent = `${r.last_name} ${r.first_name} ${r.middle_name}`;
+  const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+  const input = document.getElementById('extendDate');
+  input.min = tomorrow;
+  input.value = r.planned_check_out > tomorrow ? r.planned_check_out : tomorrow;
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('mExtendStay')).show();
+}
+
+async function submitExtendStay() {
+  if (!extendingResidentId) return;
+  const date = document.getElementById('extendDate').value;
+  if (!date) { notify('Укажите новую дату выезда', true); return; }
+  await apiFetch('PATCH', `/residents/${extendingResidentId}/extend`, {planned_check_out: date})
+    .then(() => {
+      closeModal('mExtendStay');
+      extendingResidentId = null;
+      loadResidents();
+      notify('Дата выезда обновлена');
+    })
+    .catch(e => notify(e.message, true));
+}
+
 function resSortVal(r, key) {
   const bed = Object.values(refs.beds).find(b=>b.current_resident_id===r.record_id);
   const room = bed ? refs.rooms[bed.room_id] : null;
@@ -726,21 +827,24 @@ function renderResidents() {
         <td class="fw-semibold">${r.last_name} ${r.first_name} ${r.middle_name}</td>
         <td>${bed?bed.bed_label:'—'}</td>
         <td>${p?.name||'—'}</td>
-        <td>${r.check_in_date}</td>
-        <td>${r.planned_check_out}</td>
+        <td>${fmtDate(r.check_in_date)}</td>
+        <td>${fmtDate(r.planned_check_out)}</td>
         <td>${daysBadge}</td>
-        <td>${age} лет</td>
+        <td>${ageStr(age)}</td>
         <td>${r.check_in_price} ₽</td>
-        <td><button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="checkOut(${r.record_id},'${r.last_name} ${r.first_name}')">Выселить</button></td>
+        <td class="text-nowrap">
+          <button class="btn btn-sm btn-outline-primary py-0 px-2 me-1" onclick="openExtendStay(${r.record_id})">Продлить</button>
+          <button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="checkOut(${r.record_id})">Выселить</button>
+        </td>
       </tr>`;
     }
     return `<tr>
       <td class="fw-semibold">${r.last_name} ${r.first_name} ${r.middle_name}</td>
-      <td>${r.check_in_date}</td>
-      <td>${r.planned_check_out}</td>
-      <td>${r.actual_check_out||'—'}</td>
+      <td>${fmtDate(r.check_in_date)}</td>
+      <td>${fmtDate(r.planned_check_out)}</td>
+      <td>${fmtDate(r.actual_check_out)}</td>
       <td>${r.check_in_price} ₽</td>
-      <td>${age} лет</td>
+      <td>${ageStr(age)}</td>
     </tr>`;
   }).join('');
   document.getElementById('residentsCount').textContent = `Показано: ${data.length} из ${allResidents.length}`;
@@ -760,10 +864,12 @@ function switchResidents(cur) {
   loadResidents();
 }
 
-async function checkOut(id, name) {
-  if (!confirm(`Выселить ${name}?\nДата выезда зафиксируется сегодняшним числом.`)) return;
+async function checkOut(id) {
+  const r = allResidents.find(x => x.record_id === id);
+  const name = r ? `${r.last_name} ${r.first_name}` : '';
+  if (!confirm(`Выселить${name ? ' ' + name : ''}?\nДата выезда зафиксируется сегодняшним числом.`)) return;
   await apiFetch('POST',`/residents/${id}/check-out`).then(()=>{
-    loadResidents(); loadBeds(); notify(`${name} выселен(а)`);
+    loadResidents(); loadBeds(); notify(`${name || 'Жилец'} выселен(а)`);
   }).catch(e=>notify(e.message,true));
 }
 
@@ -785,7 +891,8 @@ function renderBookings() {
   let data = allBookings.filter(b => !q ||
     (b.future_res_last_name+' '+b.future_res_first_name+' '+b.future_res_mid_name+' '+b.contact_phone).toLowerCase().includes(q));
   data = sortedData(data, 'bookings', bkSortVal);
-  const visIds = data.map(b=>b.booking_id);
+  const visIds = data.map(b => b.booking_id);
+  lastVisibleBookingIds = visIds;
   const allChecked = visIds.length>0 && visIds.every(id=>selected.bookings.has(id));
   const sk = sorts.bookings.key;
   const sortTh = (label, key) =>
@@ -811,8 +918,12 @@ function renderBookings() {
     const chk  = selected.bookings.has(b.booking_id);
     const days = daysUntil(b.planned_check_in);
     const arrived = days <= 0;
-    const soon = !arrived && days <= 3 ? ' <span class="badge bg-warning text-dark small">скоро</span>' : '';
-    const arrivedBadge = arrived ? ' <span class="badge bg-success small">заехал</span>' : '';
+    const soon = !arrived && days <= 3 ? ` <span class="badge bg-warning text-dark small">через ${days}д</span>` : '';
+    const bedFree = bed && bed.is_active && bed.current_resident_id === null;
+    const bedBlocked = arrived && !bedFree;
+    const blockMsg = bedBlocked
+      ? `<span class="text-muted small ms-1">(${bed && !bed.is_active ? 'ремонт' : 'место занято'})</span>`
+      : '';
     return `<tr${arrived?' class="table-success"':''}>
       <td><input type="checkbox" class="form-check-input" ${chk?'checked':''} onchange="toggleRowSelect('bookings',${b.booking_id})"></td>
       <td class="fw-semibold">${b.future_res_last_name} ${b.future_res_first_name} ${b.future_res_mid_name}</td>
@@ -820,11 +931,12 @@ function renderBookings() {
       <td>${room?.room_number||'—'}</td>
       <td>${p?.name||'—'}</td>
       <td class="small">${b.contact_phone}</td>
-      <td>${b.planned_check_in}${soon}${arrivedBadge}</td>
-      <td>${b.planned_check_out}</td>
+      <td>${fmtDate(b.planned_check_in)}${soon}</td>
+      <td>${fmtDate(b.planned_check_out)}</td>
       <td class="text-nowrap">
-        ${arrived ? `<button class="btn btn-sm btn-success py-0 px-2 me-1" onclick="openCheckInFromBooking(${b.booking_id})">Заселить</button>` : ''}
-        <button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="cancelBooking(${b.booking_id},'${b.future_res_last_name}')">✕</button>
+        ${arrived && bedFree ? `<button class="btn btn-sm btn-success py-0 px-2 me-1" onclick="openCheckInFromBooking(${b.booking_id})">Заселить</button>` : ''}
+        ${blockMsg}
+        <button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="cancelBooking(${b.booking_id})">✕</button>
       </td>
     </tr>`;
   }).join('');
@@ -839,11 +951,13 @@ async function loadBookings() {
 async function openBookingModal() {
   await refreshRefs();
   const sel = document.getElementById('selBedBooking');
+  // кровати на ремонте исключаем — на них нельзя заселить
+  const bookable = allBeds.filter(b => b.is_active);
   sel.innerHTML = '<option value="">— выберите —</option>' +
-    allBeds.map(b=>{
+    bookable.map(b=>{
       const room = refs.rooms[b.room_id];
       const p    = getPansionat(b.room_id);
-      const st   = b.current_resident_id?' [занята]':!b.is_active?' [ремонт]':' [свободна]';
+      const st   = b.current_resident_id ? ' [занята]' : ' [свободна]';
       return `<option value="${b.bed_id}">${b.bed_label} — Комн.${room?.room_number||'?'} — ${p?.name||'?'}${st}</option>`;
     }).join('');
   const tomorrow = new Date(Date.now()+86400000).toISOString().slice(0,10);
@@ -863,8 +977,10 @@ async function submitAddBooking() {
   }).catch(e=>notify(e.message,true));
 }
 
-async function cancelBooking(id, name) {
-  if (!confirm(`Отменить бронирование для ${name}?`)) return;
+async function cancelBooking(id) {
+  const bk = allBookings.find(x => x.booking_id === id);
+  const name = bk ? `${bk.future_res_last_name} ${bk.future_res_first_name}` : '';
+  if (!confirm(`Отменить бронирование${name ? ' для ' + name : ''}?`)) return;
   await apiFetch('DELETE',`/bookings/${id}`).then(()=>{ loadBookings(); notify('Бронирование отменено'); }).catch(e=>notify(e.message,true));
 }
 
@@ -880,7 +996,7 @@ function openCheckInFromBooking(bookingId) {
     <div class="fw-semibold fs-6">${b.future_res_last_name} ${b.future_res_first_name} ${b.future_res_mid_name}</div>
     <div class="text-muted small mt-1">
       ${bed?.bed_label||'—'} · Комн. ${room?.room_number||'?'} · ${p?.name||'?'}<br>
-      Выезд: ${b.planned_check_out} · ${rt?.base_price||'?'} ₽/сутки
+      Выезд: ${fmtDate(b.planned_check_out)} · ${rt?.base_price||'?'} ₽/сутки
     </div>`;
   document.getElementById('fCheckInFromBooking').reset();
   bootstrap.Modal.getOrCreateInstance(document.getElementById('mCheckInFromBooking')).show();
@@ -901,14 +1017,15 @@ async function submitCheckInFromBooking() {
 }
 
 async function bulkCancelBookings() {
-  const ids = [...selected.bookings];
+  // отменяем только те, что видны на экране сейчас
+  const ids = [...selected.bookings].filter(id => lastVisibleBookingIds.includes(id));
   if (!ids.length) return;
   if (!confirm(`Отменить ${ids.length} бронирований?`)) return;
   let ok = 0, fail = 0;
   for (const id of ids) {
     await apiFetch('DELETE',`/bookings/${id}`).then(()=>ok++).catch(()=>fail++);
   }
-  selected.bookings.clear();
+  ids.forEach(id => selected.bookings.delete(id));
   updateBulkBar('bookings');
   await loadBookings();
   notify(`Отменено: ${ok}${fail?`, ошибок: ${fail}`:''}`, fail > 0);
