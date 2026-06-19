@@ -59,7 +59,9 @@ th.sorted .sort-icon { opacity:1; color:#0d6efd }
     <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-beds">Кровати</button></li>
     <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-residents">Жильцы</button></li>
     <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-bookings">Бронирования</button></li>
-    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-ref">Справочники</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-pansionats">Пансионаты</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-roomtypes">Типы комнат</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-rooms">Комнаты</button></li>
   </ul>
 
   <div class="tab-content">
@@ -147,43 +149,78 @@ th.sorted .sort-icon { opacity:1; color:#0d6efd }
       <div class="text-muted small mt-1" id="bookingsCount"></div>
     </div>
 
-    <div class="tab-pane fade" id="tab-ref">
-      <div class="alert alert-info d-flex gap-2 mb-3" id="setupHint">
-        <span>ℹ️</span><div><strong>Порядок настройки:</strong> Пансионат → Тип комнаты → Комната → Кровать</div>
-      </div>
-      <div class="card mb-3">
-        <div class="card-header d-flex justify-content-between align-items-center">
-          <span class="fw-semibold">Пансионаты</span>
-          <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#mAddPansionat">+ Добавить</button>
+    <div class="tab-pane fade" id="tab-pansionats">
+      <div class="row g-2 align-items-center mb-2">
+        <div class="col-sm-6">
+          <input type="search" class="form-control form-control-sm" id="searchPansionats" placeholder="Поиск по названию или адресу…" oninput="renderPansionats()">
         </div>
-        <div class="card-body p-0">
-          <table class="table table-sm mb-0"><thead><tr><th>#</th><th>Название</th><th>Адрес</th><th></th></tr></thead>
-          <tbody id="pansionatsBody"></tbody></table>
+        <div class="col-sm-6 text-end">
+          <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#mAddPansionat">+ Добавить</button>
         </div>
       </div>
-      <div class="card mb-3">
-        <div class="card-header d-flex justify-content-between align-items-center">
-          <span class="fw-semibold">Типы комнат</span>
-          <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#mAddRoomType">+ Добавить</button>
+      <div class="bulk-bar d-none p-2 mb-2 d-flex gap-2 align-items-center" id="bulk-pansionats">
+        <span class="fw-semibold small">Выбрано: <span id="bulk-pansionats-n">0</span></span>
+        <button class="btn btn-sm btn-outline-danger" onclick="bulkDeletePansionats()">Удалить выбранные</button>
+        <button class="btn btn-sm btn-outline-secondary ms-auto" onclick="clearSelRef('pansionats')">Снять выделение</button>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover bg-white align-middle mb-0">
+          <thead class="table-light"><tr><th><input type="checkbox" class="form-check-input" id="chkAllPansionats" onchange="toggleSelectAllRef('pansionats',this.checked)"></th><th>#</th><th>Название</th><th>Адрес</th><th></th></tr></thead>
+          <tbody id="pansionatsBody"></tbody>
+        </table>
+      </div>
+      <div class="text-muted small mt-1" id="pansionatsCount"></div>
+    </div>
+
+    <div class="tab-pane fade" id="tab-roomtypes">
+      <div class="row g-2 align-items-center mb-2">
+        <div class="col-sm-6">
+          <input type="search" class="form-control form-control-sm" id="searchRoomTypes" placeholder="Поиск по названию…" oninput="renderRoomTypes()">
         </div>
-        <div class="card-body p-0">
-          <table class="table table-sm mb-0"><thead><tr><th>#</th><th>Название</th><th>Цена/сутки</th><th></th></tr></thead>
-          <tbody id="roomTypesBody"></tbody></table>
+        <div class="col-sm-6 text-end">
+          <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#mAddRoomType">+ Добавить</button>
         </div>
       </div>
-      <div class="card mb-3">
-        <div class="card-header d-flex justify-content-between align-items-center">
-          <span class="fw-semibold">Комнаты</span>
-          <button class="btn btn-sm btn-primary" onclick="openAddRoomModal()">+ Добавить</button>
+      <div class="bulk-bar d-none p-2 mb-2 d-flex gap-2 align-items-center" id="bulk-roomtypes">
+        <span class="fw-semibold small">Выбрано: <span id="bulk-roomtypes-n">0</span></span>
+        <button class="btn btn-sm btn-outline-danger" onclick="bulkDeleteRoomTypes()">Удалить выбранные</button>
+        <button class="btn btn-sm btn-outline-secondary ms-auto" onclick="clearSelRef('roomtypes')">Снять выделение</button>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover bg-white align-middle mb-0">
+          <thead class="table-light"><tr><th><input type="checkbox" class="form-check-input" id="chkAllRoomTypes" onchange="toggleSelectAllRef('roomtypes',this.checked)"></th><th>#</th><th>Название</th><th>Цена/сутки</th><th></th></tr></thead>
+          <tbody id="roomTypesBody"></tbody>
+        </table>
+      </div>
+      <div class="text-muted small mt-1" id="roomTypesCount"></div>
+    </div>
+
+    <div class="tab-pane fade" id="tab-rooms">
+      <div class="row g-2 align-items-center mb-2">
+        <div class="col-sm-4">
+          <input type="search" class="form-control form-control-sm" id="searchRooms" placeholder="Поиск: номер, пансионат, тип…" oninput="renderRooms()">
         </div>
-        <div class="card-body p-0">
-          <div class="p-2">
-            <input type="search" class="form-control form-control-sm" id="searchRooms" placeholder="Поиск: номер, пансионат, тип…" oninput="renderRooms()">
-          </div>
-          <table class="table table-sm mb-0"><thead><tr><th>Номер</th><th>Пансионат</th><th>Тип</th><th>Цена/сут</th><th></th></tr></thead>
-          <tbody id="roomsBody"></tbody></table>
+        <div class="col-sm-4">
+          <select class="form-select form-select-sm" id="filterRoomPansionat" onchange="renderRooms()">
+            <option value="">Все пансионаты</option>
+          </select>
+        </div>
+        <div class="col-sm-4 text-end">
+          <button class="btn btn-primary btn-sm" onclick="openAddRoomModal()">+ Добавить</button>
         </div>
       </div>
+      <div class="bulk-bar d-none p-2 mb-2 d-flex gap-2 align-items-center" id="bulk-rooms">
+        <span class="fw-semibold small">Выбрано: <span id="bulk-rooms-n">0</span></span>
+        <button class="btn btn-sm btn-outline-danger" onclick="bulkDeleteRooms()">Удалить выбранные</button>
+        <button class="btn btn-sm btn-outline-secondary ms-auto" onclick="clearSelRef('rooms')">Снять выделение</button>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover bg-white align-middle mb-0">
+          <thead class="table-light"><tr><th><input type="checkbox" class="form-check-input" id="chkAllRooms" onchange="toggleSelectAllRef('rooms',this.checked)"></th><th>Номер</th><th>Пансионат</th><th>Тип</th><th>Цена/сут</th><th></th></tr></thead>
+          <tbody id="roomsBody"></tbody>
+        </table>
+      </div>
+      <div class="text-muted small mt-1" id="roomsCount"></div>
     </div>
 
   </div>
@@ -385,7 +422,8 @@ const sorts = {
   residents: {key:null, dir:1},
   bookings: {key:null, dir:1},
 };
-const selected = {beds: new Set(), bookings: new Set()};
+const selected = {beds: new Set(), bookings: new Set(), pansionats: new Set(), roomtypes: new Set(), rooms: new Set()};
+let lastVisiblePansionatIds = [], lastVisibleRoomTypeIds = [], lastVisibleRoomIds = [];
 
 async function apiFetch(method, path, body) {
   const opts = {method, headers:{'Content-Type':'application/json'}};
@@ -398,7 +436,27 @@ async function apiFetch(method, path, body) {
       msg = tr(e.detail);
     } else if (Array.isArray(e.detail)) {
       // Pydantic validation error — detail это массив объектов
-      msg = e.detail.map(d => d.msg || JSON.stringify(d)).join('; ');
+      const FIELDS = {
+        last_name:'Фамилия', first_name:'Имя', middle_name:'Отчество',
+        passport_series:'Серия паспорта', passport_number:'Номер паспорта',
+        birth_date:'Дата рождения', planned_check_out:'Дата выезда',
+        planned_check_in:'Дата заезда', bed_id:'Место', base_price:'Цена',
+        contact_phone:'Телефон', room_number:'Номер комнаты', name:'Название',
+        address:'Адрес', type_name:'Тип', room_id:'Комната', bed_label:'Название места',
+      };
+      const ETYPES = {
+        date_from_datetime_parsing:'неверный формат даты',
+        date_parsing:'неверный формат даты',
+        string_too_short:'слишком короткое значение',
+        missing:'обязательное поле не заполнено',
+        int_parsing:'ожидается число',
+        float_parsing:'ожидается число',
+      };
+      msg = e.detail.map(d => {
+        const field = d.loc ? (FIELDS[d.loc[d.loc.length-1]] || '') : '';
+        const em = (d.type && ETYPES[d.type]) || d.msg || 'ошибка';
+        return field ? `${field}: ${em}` : em;
+      }).join('; ');
     } else {
       msg = 'Ошибка сервера';
     }
@@ -1048,38 +1106,145 @@ async function bulkCancelBookings() {
   notify(`Отменено: ${ok}${fail?`, ошибок: ${fail}`:''}`, fail > 0);
 }
 
-function renderRooms() {
-  const q = document.getElementById('searchRooms').value.toLowerCase();
-  const data = allRooms.filter(r => {
-    if (!q) return true;
-    const p  = refs.pansionats[r.pansionat_id];
-    const rt = refs.roomTypes[r.room_type_id];
-    return [r.room_number, p?.name||'', rt?.type_name||''].join(' ').toLowerCase().includes(q);
-  });
-  document.getElementById('roomsBody').innerHTML = data.length
-    ? data.map(r=>{
-        const p  = refs.pansionats[r.pansionat_id];
-        const rt = refs.roomTypes[r.room_type_id];
-        return `<tr><td>${r.room_number}</td><td>${p?.name||'—'}</td><td>${rt?.type_name||'—'}</td><td>${rt?.base_price||'—'} ₽</td>
-        <td><button class="btn btn-sm btn-outline-danger py-0 px-1" onclick="delRoom(${r.room_id})">✕</button></td></tr>`;
-      }).join('')
-    : emptyRow(5, 'Нет комнат');
+// ── Вкладка Пансионаты ──────────────────────────────────────────────────────
+function renderPansionats() {
+  const q = document.getElementById('searchPansionats').value.toLowerCase();
+  const data = Object.values(refs.pansionats).filter(p =>
+    !q || (p.name + ' ' + p.address).toLowerCase().includes(q));
+  lastVisiblePansionatIds = data.map(p => p.pansionat_id);
+  const allCh = lastVisiblePansionatIds.length > 0 && lastVisiblePansionatIds.every(id => selected.pansionats.has(id));
+  document.getElementById('chkAllPansionats').checked = allCh;
+  document.getElementById('pansionatsBody').innerHTML = data.length
+    ? data.map(p => `<tr>
+        <td><input type="checkbox" class="form-check-input" ${selected.pansionats.has(p.pansionat_id)?'checked':''} onchange="toggleSelRef('pansionats',${p.pansionat_id})"></td>
+        <td>${p.pansionat_id}</td><td class="fw-semibold">${p.name}</td><td>${p.address}</td>
+        <td><button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="delPansionat(${p.pansionat_id})">✕</button></td>
+      </tr>`).join('')
+    : emptyRow(5, 'Нет пансионатов');
+  document.getElementById('pansionatsCount').textContent = data.length ? `Показано: ${data.length}` : '';
 }
 
-async function loadReference() {
-  await refreshRefs();
-  const pansionats = Object.values(refs.pansionats);
-  const roomTypes  = Object.values(refs.roomTypes);
-  document.getElementById('pansionatsBody').innerHTML = pansionats.length
-    ? pansionats.map(p=>`<tr><td>${p.pansionat_id}</td><td>${p.name}</td><td>${p.address}</td>
-      <td><button class="btn btn-sm btn-outline-danger py-0 px-1" onclick="delPansionat(${p.pansionat_id})">✕</button></td></tr>`).join('')
-    : emptyRow(4,'Нет пансионатов');
-  document.getElementById('roomTypesBody').innerHTML = roomTypes.length
-    ? roomTypes.map(t=>`<tr><td>${t.room_type_id}</td><td>${t.type_name}</td><td>${t.base_price} ₽</td>
-      <td><button class="btn btn-sm btn-outline-danger py-0 px-1" onclick="delRoomType(${t.room_type_id})">✕</button></td></tr>`).join('')
-    : emptyRow(4,'Нет типов комнат');
-  document.getElementById('setupHint').style.display = pansionats.length && roomTypes.length && allRooms.length ? 'none' : '';
-  renderRooms();
+async function loadPansionats() { await refreshRefs(); renderPansionats(); }
+
+function toggleSelRef(table, id) {
+  if (selected[table].has(id)) selected[table].delete(id);
+  else selected[table].add(id);
+  const n = selected[table].size;
+  const bar = document.getElementById(`bulk-${table}`);
+  if (bar) { bar.classList.toggle('d-none', n === 0); document.getElementById(`bulk-${table}-n`).textContent = n; }
+}
+
+function toggleSelectAllRef(table, checked) {
+  const ids = table === 'pansionats' ? lastVisiblePansionatIds
+            : table === 'roomtypes'  ? lastVisibleRoomTypeIds
+            : lastVisibleRoomIds;
+  if (checked) ids.forEach(id => selected[table].add(id));
+  else ids.forEach(id => selected[table].delete(id));
+  const n = selected[table].size;
+  const bar = document.getElementById(`bulk-${table}`);
+  if (bar) { bar.classList.toggle('d-none', n === 0); document.getElementById(`bulk-${table}-n`).textContent = n; }
+  if (table === 'pansionats') renderPansionats();
+  else if (table === 'roomtypes') renderRoomTypes();
+  else renderRooms();
+}
+
+function clearSelRef(table) {
+  selected[table].clear();
+  const bar = document.getElementById(`bulk-${table}`);
+  if (bar) bar.classList.add('d-none');
+  if (table === 'pansionats') renderPansionats();
+  else if (table === 'roomtypes') renderRoomTypes();
+  else renderRooms();
+}
+
+async function bulkDeletePansionats() {
+  const ids = [...selected.pansionats].filter(id => lastVisiblePansionatIds.includes(id));
+  if (!ids.length) return;
+  if (!confirm(`Удалить ${ids.length} пансионатов?`)) return;
+  let ok = 0, fail = 0;
+  for (const id of ids) await apiFetch('DELETE',`/pansionats/${id}`).then(()=>ok++).catch(()=>fail++);
+  ids.forEach(id => selected.pansionats.delete(id));
+  await loadPansionats();
+  notify(`Удалено: ${ok}${fail?`, ошибок: ${fail}`:''}`, fail > 0);
+}
+
+// ── Вкладка Типы комнат ──────────────────────────────────────────────────────
+function renderRoomTypes() {
+  const q = document.getElementById('searchRoomTypes').value.toLowerCase();
+  const data = Object.values(refs.roomTypes).filter(t => !q || t.type_name.toLowerCase().includes(q));
+  lastVisibleRoomTypeIds = data.map(t => t.room_type_id);
+  const allCh = lastVisibleRoomTypeIds.length > 0 && lastVisibleRoomTypeIds.every(id => selected.roomtypes.has(id));
+  document.getElementById('chkAllRoomTypes').checked = allCh;
+  document.getElementById('roomTypesBody').innerHTML = data.length
+    ? data.map(t => `<tr>
+        <td><input type="checkbox" class="form-check-input" ${selected.roomtypes.has(t.room_type_id)?'checked':''} onchange="toggleSelRef('roomtypes',${t.room_type_id})"></td>
+        <td>${t.room_type_id}</td><td class="fw-semibold">${t.type_name}</td><td>${t.base_price} ₽</td>
+        <td><button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="delRoomType(${t.room_type_id})">✕</button></td>
+      </tr>`).join('')
+    : emptyRow(5, 'Нет типов комнат');
+  document.getElementById('roomTypesCount').textContent = data.length ? `Показано: ${data.length}` : '';
+}
+
+async function loadRoomTypes() { await refreshRefs(); renderRoomTypes(); }
+
+async function bulkDeleteRoomTypes() {
+  const ids = [...selected.roomtypes].filter(id => lastVisibleRoomTypeIds.includes(id));
+  if (!ids.length) return;
+  if (!confirm(`Удалить ${ids.length} типов комнат?`)) return;
+  let ok = 0, fail = 0;
+  for (const id of ids) await apiFetch('DELETE',`/room-types/${id}`).then(()=>ok++).catch(()=>fail++);
+  ids.forEach(id => selected.roomtypes.delete(id));
+  await loadRoomTypes();
+  notify(`Удалено: ${ok}${fail?`, ошибок: ${fail}`:''}`, fail > 0);
+}
+
+// ── Вкладка Комнаты ──────────────────────────────────────────────────────────
+function populateRoomPansionatFilter() {
+  const sel = document.getElementById('filterRoomPansionat');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">Все пансионаты</option>' +
+    Object.values(refs.pansionats).map(p=>`<option value="${p.pansionat_id}">${p.name}</option>`).join('');
+  sel.value = cur;
+}
+
+function renderRooms() {
+  const q = document.getElementById('searchRooms').value.toLowerCase();
+  const panId = parseInt(document.getElementById('filterRoomPansionat').value)||0;
+  const data = allRooms.filter(r => {
+    const p  = refs.pansionats[r.pansionat_id];
+    const rt = refs.roomTypes[r.room_type_id];
+    if (q && ![r.room_number, p?.name||'', rt?.type_name||''].join(' ').toLowerCase().includes(q)) return false;
+    if (panId && r.pansionat_id !== panId) return false;
+    return true;
+  });
+  lastVisibleRoomIds = data.map(r => r.room_id);
+  const allCh = lastVisibleRoomIds.length > 0 && lastVisibleRoomIds.every(id => selected.rooms.has(id));
+  document.getElementById('chkAllRooms').checked = allCh;
+  document.getElementById('roomsBody').innerHTML = data.length
+    ? data.map(r => {
+        const p  = refs.pansionats[r.pansionat_id];
+        const rt = refs.roomTypes[r.room_type_id];
+        return `<tr>
+          <td><input type="checkbox" class="form-check-input" ${selected.rooms.has(r.room_id)?'checked':''} onchange="toggleSelRef('rooms',${r.room_id})"></td>
+          <td class="fw-semibold">${r.room_number}</td><td>${p?.name||'—'}</td><td>${rt?.type_name||'—'}</td><td>${rt?.base_price||'—'} ₽</td>
+          <td><button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="delRoom(${r.room_id})">✕</button></td>
+        </tr>`;
+      }).join('')
+    : emptyRow(6, 'Нет комнат');
+  document.getElementById('roomsCount').textContent = data.length ? `Показано: ${data.length} из ${allRooms.length}` : '';
+}
+
+async function loadRooms() { await refreshRefs(); populateRoomPansionatFilter(); renderRooms(); }
+
+async function bulkDeleteRooms() {
+  const ids = [...selected.rooms].filter(id => lastVisibleRoomIds.includes(id));
+  if (!ids.length) return;
+  if (!confirm(`Удалить ${ids.length} комнат?`)) return;
+  let ok = 0, fail = 0;
+  for (const id of ids) await apiFetch('DELETE',`/rooms/${id}`).then(()=>ok++).catch(()=>fail++);
+  ids.forEach(id => selected.rooms.delete(id));
+  await loadRooms();
+  notify(`Удалено: ${ok}${fail?`, ошибок: ${fail}`:''}`, fail > 0);
 }
 
 async function openAddRoomModal() {
@@ -1094,13 +1259,13 @@ async function openAddRoomModal() {
 async function submitPansionat() {
   await apiFetch('POST','/pansionats/',readForm('fAddPansionat')).then(()=>{
     closeModal('mAddPansionat'); document.getElementById('fAddPansionat').reset();
-    loadReference(); notify('Пансионат добавлен');
+    loadPansionats(); notify('Пансионат добавлен');
   }).catch(e=>notify(e.message,true));
 }
 
 async function delPansionat(id) {
   if (!confirm('Удалить пансионат?')) return;
-  await apiFetch('DELETE',`/pansionats/${id}`).then(()=>{loadReference();notify('Удалён');}).catch(e=>notify(e.message,true));
+  await apiFetch('DELETE',`/pansionats/${id}`).then(()=>{loadPansionats();notify('Удалён');}).catch(e=>notify(e.message,true));
 }
 
 async function submitRoomType() {
@@ -1108,13 +1273,13 @@ async function submitRoomType() {
   data.base_price = parseFloat(data.base_price);
   await apiFetch('POST','/room-types/',data).then(()=>{
     closeModal('mAddRoomType'); document.getElementById('fAddRoomType').reset();
-    loadReference(); notify('Тип комнаты добавлен');
+    loadRoomTypes(); notify('Тип комнаты добавлен');
   }).catch(e=>notify(e.message,true));
 }
 
 async function delRoomType(id) {
   if (!confirm('Удалить тип комнаты?')) return;
-  await apiFetch('DELETE',`/room-types/${id}`).then(()=>{loadReference();notify('Удалён');}).catch(e=>notify(e.message,true));
+  await apiFetch('DELETE',`/room-types/${id}`).then(()=>{loadRoomTypes();notify('Удалён');}).catch(e=>notify(e.message,true));
 }
 
 async function submitRoom() {
@@ -1124,21 +1289,23 @@ async function submitRoom() {
   if (!data.pansionat_id||!data.room_type_id) { notify('Выберите пансионат и тип',true); return; }
   await apiFetch('POST','/rooms/',data).then(()=>{
     closeModal('mAddRoom'); document.getElementById('fAddRoom').reset();
-    loadReference(); notify('Комната добавлена');
+    loadRooms(); notify('Комната добавлена');
   }).catch(e=>notify(e.message,true));
 }
 
 async function delRoom(id) {
   if (!confirm('Удалить комнату?')) return;
-  await apiFetch('DELETE',`/rooms/${id}`).then(()=>{loadReference();notify('Удалена');}).catch(e=>notify(e.message,true));
+  await apiFetch('DELETE',`/rooms/${id}`).then(()=>{loadRooms();notify('Удалена');}).catch(e=>notify(e.message,true));
 }
 
 document.getElementById('mainTabs').addEventListener('shown.bs.tab', e => {
   const t = e.target.getAttribute('data-bs-target');
-  if (t === '#tab-beds') loadBeds();
-  else if (t === '#tab-residents') { refreshRefs().then(loadResidents); }
-  else if (t === '#tab-bookings')  { refreshRefs().then(loadBookings);  }
-  else if (t === '#tab-ref')       { loadReference(); }
+  if (t === '#tab-beds')       loadBeds();
+  else if (t === '#tab-residents')  { refreshRefs().then(loadResidents); }
+  else if (t === '#tab-bookings')   { refreshRefs().then(loadBookings);  }
+  else if (t === '#tab-pansionats') loadPansionats();
+  else if (t === '#tab-roomtypes')  loadRoomTypes();
+  else if (t === '#tab-rooms')      loadRooms();
 });
 
 refreshRefs().then(() => { updateStats(); populatePansionatFilter(); renderBeds(); });
