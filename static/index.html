@@ -165,7 +165,7 @@ th.sorted .sort-icon { opacity:1; color:#0d6efd }
       </div>
       <div class="table-responsive">
         <table class="table table-hover bg-white align-middle mb-0">
-          <thead class="table-light"><tr><th><input type="checkbox" class="form-check-input" id="chkAllPansionats" onchange="toggleSelectAllRef('pansionats',this.checked)"></th><th>#</th><th>Название</th><th>Адрес</th><th></th></tr></thead>
+          <thead class="table-light" id="pansionatsHead"></thead>
           <tbody id="pansionatsBody"></tbody>
         </table>
       </div>
@@ -188,7 +188,7 @@ th.sorted .sort-icon { opacity:1; color:#0d6efd }
       </div>
       <div class="table-responsive">
         <table class="table table-hover bg-white align-middle mb-0">
-          <thead class="table-light"><tr><th><input type="checkbox" class="form-check-input" id="chkAllRoomTypes" onchange="toggleSelectAllRef('roomtypes',this.checked)"></th><th>#</th><th>Название</th><th>Цена/сутки</th><th></th></tr></thead>
+          <thead class="table-light" id="roomTypesHead"></thead>
           <tbody id="roomTypesBody"></tbody>
         </table>
       </div>
@@ -216,7 +216,7 @@ th.sorted .sort-icon { opacity:1; color:#0d6efd }
       </div>
       <div class="table-responsive">
         <table class="table table-hover bg-white align-middle mb-0">
-          <thead class="table-light"><tr><th><input type="checkbox" class="form-check-input" id="chkAllRooms" onchange="toggleSelectAllRef('rooms',this.checked)"></th><th>Номер</th><th>Пансионат</th><th>Тип</th><th>Цена/сут</th><th></th></tr></thead>
+          <thead class="table-light" id="roomsHead"></thead>
           <tbody id="roomsBody"></tbody>
         </table>
       </div>
@@ -382,6 +382,62 @@ th.sorted .sort-icon { opacity:1; color:#0d6efd }
   <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button><button class="btn btn-primary" onclick="submitRoom()">Создать</button></div>
 </div></div></div>
 
+<!-- Редактирование места -->
+<div class="modal fade" id="mEditBed" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+  <div class="modal-header"><h5 class="modal-title">Редактирование места</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+  <div class="modal-body"><form id="fEditBed">
+    <div class="mb-3"><label class="form-label fw-semibold">Название места</label><input type="text" class="form-control" name="bed_label" required></div>
+  </form></div>
+  <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button><button class="btn btn-primary" onclick="submitEditBed()">Сохранить</button></div>
+</div></div></div>
+
+<!-- Редактирование бронирования -->
+<div class="modal fade" id="mEditBooking" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
+  <div class="modal-header"><h5 class="modal-title">Редактирование бронирования</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+  <div class="modal-body"><form id="fEditBooking">
+    <div class="row g-2">
+      <div class="col-4"><label class="form-label">Фамилия</label><input type="text" class="form-control" name="future_res_last_name" required></div>
+      <div class="col-4"><label class="form-label">Имя</label><input type="text" class="form-control" name="future_res_first_name" required></div>
+      <div class="col-4"><label class="form-label">Отчество</label><input type="text" class="form-control" name="future_res_mid_name" required></div>
+      <div class="col-12"><label class="form-label">Телефон</label><input type="text" class="form-control" name="contact_phone" required></div>
+      <div class="col-6"><label class="form-label">Дата заезда</label><input type="date" class="form-control" name="planned_check_in" required></div>
+      <div class="col-6"><label class="form-label">Дата выезда</label><input type="date" class="form-control" name="planned_check_out" required></div>
+    </div>
+  </form></div>
+  <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button><button class="btn btn-primary" onclick="submitEditBooking()">Сохранить</button></div>
+</div></div></div>
+
+<!-- Редактирование пансионата -->
+<div class="modal fade" id="mEditPansionat" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+  <div class="modal-header"><h5 class="modal-title">Редактирование пансионата</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+  <div class="modal-body"><form id="fEditPansionat">
+    <div class="mb-3"><label class="form-label">Название</label><input type="text" class="form-control" name="name" required></div>
+    <div class="mb-3"><label class="form-label">Адрес</label><input type="text" class="form-control" name="address" required></div>
+  </form></div>
+  <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button><button class="btn btn-primary" onclick="submitEditPansionat()">Сохранить</button></div>
+</div></div></div>
+
+<!-- Редактирование типа комнаты -->
+<div class="modal fade" id="mEditRoomType" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+  <div class="modal-header"><h5 class="modal-title">Редактирование типа комнаты</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+  <div class="modal-body"><form id="fEditRoomType">
+    <div class="mb-3"><label class="form-label">Название</label><input type="text" class="form-control" name="type_name" required></div>
+    <div class="mb-3"><label class="form-label">Цена за сутки, ₽</label><input type="number" step="0.01" min="1" class="form-control" name="base_price" required></div>
+  </form></div>
+  <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button><button class="btn btn-primary" onclick="submitEditRoomType()">Сохранить</button></div>
+</div></div></div>
+
+<!-- Редактирование комнаты -->
+<div class="modal fade" id="mEditRoom" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+  <div class="modal-header"><h5 class="modal-title">Редактирование комнаты</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+  <div class="modal-body"><form id="fEditRoom">
+    <div class="mb-3"><label class="form-label">Пансионат</label><select class="form-select" id="selPansionatEditRoom" name="pansionat_id" required><option value="">—</option></select></div>
+    <div class="mb-3"><label class="form-label">Тип комнаты</label><select class="form-select" id="selRoomTypeEditRoom" name="room_type_id" required><option value="">—</option></select></div>
+    <div class="mb-3"><label class="form-label">Номер комнаты</label><input type="text" class="form-control" name="room_number" required></div>
+  </form></div>
+  <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button><button class="btn btn-primary" onclick="submitEditRoom()">Сохранить</button></div>
+</div></div></div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 const ERR = {
@@ -421,9 +477,14 @@ const sorts = {
   beds: {key:null, dir:1},
   residents: {key:null, dir:1},
   bookings: {key:null, dir:1},
+  pansionats: {key:null, dir:1},
+  roomtypes: {key:null, dir:1},
+  rooms: {key:null, dir:1},
 };
 const selected = {beds: new Set(), bookings: new Set(), pansionats: new Set(), roomtypes: new Set(), rooms: new Set()};
 let lastVisiblePansionatIds = [], lastVisibleRoomTypeIds = [], lastVisibleRoomIds = [];
+let editingBedId = null, editingBookingId = null;
+let editingPansionatId = null, editingRoomTypeId = null, editingRoomId = null;
 
 async function apiFetch(method, path, body) {
   const opts = {method, headers:{'Content-Type':'application/json'}};
@@ -702,6 +763,7 @@ function renderBeds() {
       <td>${resCell}</td>
       <td class="text-nowrap">
         ${isFree?`<button class="btn btn-sm btn-success py-0 px-2 me-1" onclick="openCheckIn(${b.bed_id})">Заселить</button>`:''}
+        <button class="btn btn-sm btn-outline-secondary py-0 px-2 me-1" onclick="openEditBed(${b.bed_id})">✎</button>
         <button class="btn btn-sm btn-outline-secondary py-0 px-2 me-1" onclick="toggleBed(${b.bed_id},${b.is_active})">
           ${b.is_active?'На ремонт':'В работу'}
         </button>
@@ -1011,6 +1073,7 @@ function renderBookings() {
       <td class="text-nowrap">
         ${arrived && bedFree ? `<button class="btn btn-sm btn-success py-0 px-2 me-1" onclick="openCheckInFromBooking(${b.booking_id})">Заселить</button>` : ''}
         ${blockMsg}
+        <button class="btn btn-sm btn-outline-secondary py-0 px-2 me-1" onclick="openEditBooking(${b.booking_id})">✎</button>
         <button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="cancelBooking(${b.booking_id})">✕</button>
       </td>
     </tr>`;
@@ -1107,20 +1170,38 @@ async function bulkCancelBookings() {
 }
 
 // ── Вкладка Пансионаты ──────────────────────────────────────────────────────
+function pansionatSortVal(p, key) {
+  switch(key) {
+    case 'name': return p.name;
+    case 'address': return p.address;
+    default: return null;
+  }
+}
+
 function renderPansionats() {
   const q = document.getElementById('searchPansionats').value.toLowerCase();
-  const data = Object.values(refs.pansionats).filter(p =>
+  let data = Object.values(refs.pansionats).filter(p =>
     !q || (p.name + ' ' + p.address).toLowerCase().includes(q));
+  data = sortedData(data, 'pansionats', pansionatSortVal);
   lastVisiblePansionatIds = data.map(p => p.pansionat_id);
   const allCh = lastVisiblePansionatIds.length > 0 && lastVisiblePansionatIds.every(id => selected.pansionats.has(id));
-  document.getElementById('chkAllPansionats').checked = allCh;
+  const sk = sorts.pansionats.key;
+  const sortTh = (label, key) =>
+    `<th class="sortable${sk===key?' sorted':''}" onclick="toggleSort('pansionats','${key}',renderPansionats)">${label}${sortIcon('pansionats',key)}</th>`;
+  document.getElementById('pansionatsHead').innerHTML = `<tr>
+    <th><input type="checkbox" class="form-check-input" ${allCh?'checked':''} onchange="toggleSelectAllRef('pansionats',this.checked)"></th>
+    ${sortTh('Название','name')}${sortTh('Адрес','address')}<th></th>
+  </tr>`;
   document.getElementById('pansionatsBody').innerHTML = data.length
     ? data.map(p => `<tr>
         <td><input type="checkbox" class="form-check-input" ${selected.pansionats.has(p.pansionat_id)?'checked':''} onchange="toggleSelRef('pansionats',${p.pansionat_id})"></td>
-        <td>${p.pansionat_id}</td><td class="fw-semibold">${p.name}</td><td>${p.address}</td>
-        <td><button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="delPansionat(${p.pansionat_id})">✕</button></td>
+        <td class="fw-semibold">${p.name}</td><td>${p.address}</td>
+        <td class="text-nowrap">
+          <button class="btn btn-sm btn-outline-secondary py-0 px-2 me-1" onclick="openEditPansionat(${p.pansionat_id})">✎</button>
+          <button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="delPansionat(${p.pansionat_id})">✕</button>
+        </td>
       </tr>`).join('')
-    : emptyRow(5, 'Нет пансионатов');
+    : emptyRow(4, 'Нет пансионатов');
   document.getElementById('pansionatsCount').textContent = data.length ? `Показано: ${data.length}` : '';
 }
 
@@ -1169,19 +1250,37 @@ async function bulkDeletePansionats() {
 }
 
 // ── Вкладка Типы комнат ──────────────────────────────────────────────────────
+function roomTypeSortVal(t, key) {
+  switch(key) {
+    case 'name': return t.type_name;
+    case 'price': return Number(t.base_price);
+    default: return null;
+  }
+}
+
 function renderRoomTypes() {
   const q = document.getElementById('searchRoomTypes').value.toLowerCase();
-  const data = Object.values(refs.roomTypes).filter(t => !q || t.type_name.toLowerCase().includes(q));
+  let data = Object.values(refs.roomTypes).filter(t => !q || t.type_name.toLowerCase().includes(q));
+  data = sortedData(data, 'roomtypes', roomTypeSortVal);
   lastVisibleRoomTypeIds = data.map(t => t.room_type_id);
   const allCh = lastVisibleRoomTypeIds.length > 0 && lastVisibleRoomTypeIds.every(id => selected.roomtypes.has(id));
-  document.getElementById('chkAllRoomTypes').checked = allCh;
+  const sk = sorts.roomtypes.key;
+  const sortTh = (label, key) =>
+    `<th class="sortable${sk===key?' sorted':''}" onclick="toggleSort('roomtypes','${key}',renderRoomTypes)">${label}${sortIcon('roomtypes',key)}</th>`;
+  document.getElementById('roomTypesHead').innerHTML = `<tr>
+    <th><input type="checkbox" class="form-check-input" ${allCh?'checked':''} onchange="toggleSelectAllRef('roomtypes',this.checked)"></th>
+    ${sortTh('Название','name')}${sortTh('Цена/сутки','price')}<th></th>
+  </tr>`;
   document.getElementById('roomTypesBody').innerHTML = data.length
     ? data.map(t => `<tr>
         <td><input type="checkbox" class="form-check-input" ${selected.roomtypes.has(t.room_type_id)?'checked':''} onchange="toggleSelRef('roomtypes',${t.room_type_id})"></td>
-        <td>${t.room_type_id}</td><td class="fw-semibold">${t.type_name}</td><td>${t.base_price} ₽</td>
-        <td><button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="delRoomType(${t.room_type_id})">✕</button></td>
+        <td class="fw-semibold">${t.type_name}</td><td>${t.base_price} ₽</td>
+        <td class="text-nowrap">
+          <button class="btn btn-sm btn-outline-secondary py-0 px-2 me-1" onclick="openEditRoomType(${t.room_type_id})">✎</button>
+          <button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="delRoomType(${t.room_type_id})">✕</button>
+        </td>
       </tr>`).join('')
-    : emptyRow(5, 'Нет типов комнат');
+    : emptyRow(4, 'Нет типов комнат');
   document.getElementById('roomTypesCount').textContent = data.length ? `Показано: ${data.length}` : '';
 }
 
@@ -1207,19 +1306,36 @@ function populateRoomPansionatFilter() {
   sel.value = cur;
 }
 
+function roomSortVal(r, key) {
+  switch(key) {
+    case 'number':   return r.room_number;
+    case 'pansionat':return refs.pansionats[r.pansionat_id]?.name||'';
+    case 'type':     return refs.roomTypes[r.room_type_id]?.type_name||'';
+    case 'price':    return Number(refs.roomTypes[r.room_type_id]?.base_price||0);
+    default: return null;
+  }
+}
+
 function renderRooms() {
   const q = document.getElementById('searchRooms').value.toLowerCase();
   const panId = parseInt(document.getElementById('filterRoomPansionat').value)||0;
-  const data = allRooms.filter(r => {
+  let data = allRooms.filter(r => {
     const p  = refs.pansionats[r.pansionat_id];
     const rt = refs.roomTypes[r.room_type_id];
     if (q && ![r.room_number, p?.name||'', rt?.type_name||''].join(' ').toLowerCase().includes(q)) return false;
     if (panId && r.pansionat_id !== panId) return false;
     return true;
   });
+  data = sortedData(data, 'rooms', roomSortVal);
   lastVisibleRoomIds = data.map(r => r.room_id);
   const allCh = lastVisibleRoomIds.length > 0 && lastVisibleRoomIds.every(id => selected.rooms.has(id));
-  document.getElementById('chkAllRooms').checked = allCh;
+  const sk = sorts.rooms.key;
+  const sortTh = (label, key) =>
+    `<th class="sortable${sk===key?' sorted':''}" onclick="toggleSort('rooms','${key}',renderRooms)">${label}${sortIcon('rooms',key)}</th>`;
+  document.getElementById('roomsHead').innerHTML = `<tr>
+    <th><input type="checkbox" class="form-check-input" ${allCh?'checked':''} onchange="toggleSelectAllRef('rooms',this.checked)"></th>
+    ${sortTh('Номер','number')}${sortTh('Пансионат','pansionat')}${sortTh('Тип','type')}${sortTh('Цена/сут','price')}<th></th>
+  </tr>`;
   document.getElementById('roomsBody').innerHTML = data.length
     ? data.map(r => {
         const p  = refs.pansionats[r.pansionat_id];
@@ -1227,7 +1343,10 @@ function renderRooms() {
         return `<tr>
           <td><input type="checkbox" class="form-check-input" ${selected.rooms.has(r.room_id)?'checked':''} onchange="toggleSelRef('rooms',${r.room_id})"></td>
           <td class="fw-semibold">${r.room_number}</td><td>${p?.name||'—'}</td><td>${rt?.type_name||'—'}</td><td>${rt?.base_price||'—'} ₽</td>
-          <td><button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="delRoom(${r.room_id})">✕</button></td>
+          <td class="text-nowrap">
+            <button class="btn btn-sm btn-outline-secondary py-0 px-2 me-1" onclick="openEditRoom(${r.room_id})">✎</button>
+            <button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="delRoom(${r.room_id})">✕</button>
+          </td>
         </tr>`;
       }).join('')
     : emptyRow(6, 'Нет комнат');
@@ -1296,6 +1415,109 @@ async function submitRoom() {
 async function delRoom(id) {
   if (!confirm('Удалить комнату?')) return;
   await apiFetch('DELETE',`/rooms/${id}`).then(()=>{loadRooms();notify('Удалена');}).catch(e=>notify(e.message,true));
+}
+
+// ── Редактирование кровати ────────────────────────────────────────────────────
+function openEditBed(id) {
+  const b = allBeds.find(x => x.bed_id === id);
+  if (!b) return;
+  editingBedId = id;
+  document.getElementById('fEditBed').querySelector('[name=bed_label]').value = b.bed_label;
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('mEditBed')).show();
+}
+
+async function submitEditBed() {
+  if (!editingBedId) return;
+  await apiFetch('PATCH', `/beds/${editingBedId}/label`, readForm('fEditBed'))
+    .then(() => { closeModal('mEditBed'); editingBedId = null; loadBeds(); notify('Название места обновлено'); })
+    .catch(e => notify(e.message, true));
+}
+
+// ── Редактирование бронирования ───────────────────────────────────────────────
+function openEditBooking(id) {
+  const b = allBookings.find(x => x.booking_id === id);
+  if (!b) return;
+  editingBookingId = id;
+  const f = document.getElementById('fEditBooking');
+  f.querySelector('[name=future_res_last_name]').value  = b.future_res_last_name;
+  f.querySelector('[name=future_res_first_name]').value = b.future_res_first_name;
+  f.querySelector('[name=future_res_mid_name]').value   = b.future_res_mid_name;
+  f.querySelector('[name=contact_phone]').value         = b.contact_phone;
+  f.querySelector('[name=planned_check_in]').value      = b.planned_check_in;
+  f.querySelector('[name=planned_check_out]').value     = b.planned_check_out;
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('mEditBooking')).show();
+}
+
+async function submitEditBooking() {
+  if (!editingBookingId) return;
+  await apiFetch('PUT', `/bookings/${editingBookingId}`, readForm('fEditBooking'))
+    .then(() => { closeModal('mEditBooking'); editingBookingId = null; loadBookings(); notify('Бронирование обновлено'); })
+    .catch(e => notify(e.message, true));
+}
+
+// ── Редактирование пансионата ─────────────────────────────────────────────────
+function openEditPansionat(id) {
+  const p = refs.pansionats[id];
+  if (!p) return;
+  editingPansionatId = id;
+  const f = document.getElementById('fEditPansionat');
+  f.querySelector('[name=name]').value    = p.name;
+  f.querySelector('[name=address]').value = p.address;
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('mEditPansionat')).show();
+}
+
+async function submitEditPansionat() {
+  if (!editingPansionatId) return;
+  await apiFetch('PUT', `/pansionats/${editingPansionatId}`, readForm('fEditPansionat'))
+    .then(() => { closeModal('mEditPansionat'); editingPansionatId = null; loadPansionats(); notify('Пансионат обновлён'); })
+    .catch(e => notify(e.message, true));
+}
+
+// ── Редактирование типа комнаты ───────────────────────────────────────────────
+function openEditRoomType(id) {
+  const t = refs.roomTypes[id];
+  if (!t) return;
+  editingRoomTypeId = id;
+  const f = document.getElementById('fEditRoomType');
+  f.querySelector('[name=type_name]').value  = t.type_name;
+  f.querySelector('[name=base_price]').value = t.base_price;
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('mEditRoomType')).show();
+}
+
+async function submitEditRoomType() {
+  if (!editingRoomTypeId) return;
+  const data = readForm('fEditRoomType');
+  data.base_price = parseFloat(data.base_price);
+  await apiFetch('PUT', `/room-types/${editingRoomTypeId}`, data)
+    .then(() => { closeModal('mEditRoomType'); editingRoomTypeId = null; loadRoomTypes(); notify('Тип комнаты обновлён'); })
+    .catch(e => notify(e.message, true));
+}
+
+// ── Редактирование комнаты ────────────────────────────────────────────────────
+function openEditRoom(id) {
+  const r = refs.rooms[id];
+  if (!r) return;
+  editingRoomId = id;
+  document.getElementById('selPansionatEditRoom').innerHTML = '<option value="">—</option>' +
+    Object.values(refs.pansionats).map(p=>`<option value="${p.pansionat_id}">${p.name}</option>`).join('');
+  document.getElementById('selRoomTypeEditRoom').innerHTML = '<option value="">—</option>' +
+    Object.values(refs.roomTypes).map(t=>`<option value="${t.room_type_id}">${t.type_name} — ${t.base_price}₽</option>`).join('');
+  const f = document.getElementById('fEditRoom');
+  f.querySelector('[name=pansionat_id]').value = r.pansionat_id;
+  f.querySelector('[name=room_type_id]').value = r.room_type_id;
+  f.querySelector('[name=room_number]').value  = r.room_number;
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('mEditRoom')).show();
+}
+
+async function submitEditRoom() {
+  if (!editingRoomId) return;
+  const data = readForm('fEditRoom');
+  data.pansionat_id = parseInt(data.pansionat_id);
+  data.room_type_id = parseInt(data.room_type_id);
+  if (!data.pansionat_id || !data.room_type_id) { notify('Выберите пансионат и тип', true); return; }
+  await apiFetch('PUT', `/rooms/${editingRoomId}`, data)
+    .then(() => { closeModal('mEditRoom'); editingRoomId = null; loadRooms(); notify('Комната обновлена'); })
+    .catch(e => notify(e.message, true));
 }
 
 document.getElementById('mainTabs').addEventListener('shown.bs.tab', e => {

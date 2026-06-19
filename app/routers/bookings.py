@@ -11,7 +11,7 @@ from app.models.booking import Booking
 from app.models.resident import Resident
 from app.models.room import Room
 from app.models.room_type import RoomType
-from app.schemas.booking import BookingCheckIn, BookingCreate, BookingResponse
+from app.schemas.booking import BookingCheckIn, BookingCreate, BookingUpdate, BookingResponse
 from app.schemas.resident import ResidentResponse
 
 router = APIRouter(prefix="/bookings", tags=["bookings"])
@@ -63,6 +63,30 @@ def create(data: BookingCreate, db: Session = Depends(get_db)):
 
     booking = Booking(**data.model_dump())
     db.add(booking)
+    db.commit()
+    db.refresh(booking)
+    return booking
+
+
+@router.put("/{booking_id}", response_model=BookingResponse)
+def update(booking_id: int, data: BookingUpdate, db: Session = Depends(get_db)):
+    booking = db.get(Booking, booking_id)
+    if booking is None:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    if data.planned_check_in >= data.planned_check_out:
+        raise HTTPException(status_code=400, detail="Check-in date must be before check-out date")
+    overlap = db.execute(
+        select(Booking).where(
+            Booking.bed_id == booking.bed_id,
+            Booking.booking_id != booking_id,
+            Booking.planned_check_in < data.planned_check_out,
+            Booking.planned_check_out > data.planned_check_in,
+        )
+    ).scalar_one_or_none()
+    if overlap is not None:
+        raise HTTPException(status_code=400, detail="Bed is already booked for these dates")
+    for field, value in data.model_dump().items():
+        setattr(booking, field, value)
     db.commit()
     db.refresh(booking)
     return booking

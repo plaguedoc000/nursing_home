@@ -11,6 +11,10 @@ class BedStatusUpdate(BaseModel):
     is_active: bool
 
 
+class BedLabelUpdate(BaseModel):
+    bed_label: str
+
+
 class BedResponse(BaseModel):
     bed_id: int
     room_id: int

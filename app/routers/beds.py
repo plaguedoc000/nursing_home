@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.bed import Bed
 from app.models.room import Room
-from app.schemas.bed import BedCreate, BedStatusUpdate, BedResponse
+from app.schemas.bed import BedCreate, BedStatusUpdate, BedLabelUpdate, BedResponse
 
 router = APIRouter(prefix="/beds", tags=["beds"])
 
@@ -32,6 +32,17 @@ def create(data: BedCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Room not found")
     bed = Bed(**data.model_dump())
     db.add(bed)
+    db.commit()
+    db.refresh(bed)
+    return bed
+
+
+@router.patch("/{bed_id}/label", response_model=BedResponse)
+def update_label(bed_id: int, data: BedLabelUpdate, db: Session = Depends(get_db)):
+    bed = db.get(Bed, bed_id)
+    if bed is None:
+        raise HTTPException(status_code=404, detail="Bed not found")
+    bed.bed_label = data.bed_label
     db.commit()
     db.refresh(bed)
     return bed
