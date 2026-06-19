@@ -1,45 +1,45 @@
-# Nursing Home Management System
+# Система управления пансионатом
 
-REST API for managing a chain of boarding houses: rooms, beds, residents, and advance bookings. Built as a university project at МГТУ КФ.
+REST API для управления сетью пансионатов: номера, спальные места, жильцы и предварительные бронирования.
 
-## Stack
+## Стек
 
 **Python 3.11** · **FastAPI** · **SQLAlchemy 2.0** · **PostgreSQL 15** · **Alembic** · **Docker Compose**
 
-## Architecture
+## Архитектура
 
-The project is organized into three layers that correspond to the classic separation of concerns for a web API. Routers in `app/routers/` handle HTTP and delegate to the database through SQLAlchemy sessions. Models in `app/models/` use the SQLAlchemy 2.0 typed API — every column is declared with `Mapped[T]` and `mapped_column()`, which gives full type-checker coverage without runtime overhead. Schemas in `app/schemas/` are Pydantic v2 models and are split into *request* and *response* variants so the shapes of incoming and outgoing data are always explicit.
+Проект разделён на три слоя. Роутеры в `app/routers/` принимают HTTP-запросы и работают с базой через сессию SQLAlchemy. Модели в `app/models/` написаны в стиле SQLAlchemy 2.0 — каждая колонка объявлена через `Mapped[T]` и `mapped_column()`, что даёт полную типизацию без дополнительных накладных расходов. Схемы в `app/schemas/` — это Pydantic v2 модели, разделённые на входящие и исходящие, чтобы форматы запросов и ответов всегда были явными.
 
-Database sessions are provided to route handlers via `get_db`, a FastAPI dependency that opens a session at the start of a request and closes it unconditionally in a `finally` block. Database migrations are managed with Alembic.
+Сессия базы данных передаётся в обработчики через зависимость `get_db`: открывается в начале запроса и закрывается в блоке `finally` независимо от результата. Миграции управляются через Alembic.
 
-## Domain model
+## Доменная логика
 
-A **Pansionat** (boarding house) contains **Rooms**, each of which belongs to a **RoomType** that defines the nightly rate. Each room can have one or more **Beds**. The two main operational objects are **Residents** — people currently living in the facility — and **Bookings** — advance reservations for a specific bed.
+**Пансионат** содержит **комнаты**, каждая из которых относится к **типу комнаты** с определённой ценой за сутки. В комнате может быть одно или несколько **спальных мест**. Два основных рабочих объекта — **жильцы** (текущие постояльцы) и **бронирования** (предварительные резервации на конкретное место).
 
-The two business rules worth noting: first, a bed cannot have overlapping bookings, and a booking cannot be converted to a check-in if the bed is occupied — the backend enforces both with explicit date-range overlap queries rather than relying on unique constraints alone. Second, the `check_in_price` is copied from the room type at the moment of check-in and never changes afterward, so editing a room type's rate does not affect existing residents.
+Два ключевых бизнес-правила: бронирования на одно место не могут пересекаться по датам, а само бронирование нельзя конвертировать в заселение, если место уже занято — оба случая проверяются явными запросами с диапазонами дат, а не только на уровне ограничений базы. Цена за сутки фиксируется в момент заселения и хранится в записи жильца, поэтому изменение тарифа не затрагивает тех, кто уже живёт.
 
 ## API
 
-All routes are prefixed by resource name and follow REST conventions. The full interactive spec is available at `/docs` (Swagger UI) while the server is running.
+Все маршруты сгруппированы по ресурсу и следуют REST-соглашениям. Полная интерактивная документация доступна по адресу `/docs` (Swagger UI) при запущенном сервере.
 
-| Prefix | Coverage |
+| Префикс | Что покрывает |
 |---|---|
-| `/pansionats` | CRUD for boarding houses |
-| `/room-types` | CRUD for room categories and nightly rates |
-| `/rooms` | CRUD for rooms, filtered by pansionat |
-| `/beds` | CRUD + active/repair status toggle |
-| `/residents` | Check-in, edit, extend stay, check-out, history |
-| `/bookings` | Create, edit, cancel, convert to check-in |
+| `/pansionats` | CRUD пансионатов |
+| `/room-types` | CRUD типов комнат и тарифов |
+| `/rooms` | CRUD комнат с фильтрацией по пансионату |
+| `/beds` | CRUD мест + переключение статуса (работает / на ремонте) |
+| `/residents` | Заселение, редактирование, продление, выселение, архив |
+| `/bookings` | Создание, редактирование, отмена, конвертация в заселение |
 
-## Running locally
+## Запуск
 
 ```bash
 docker compose up --build
 ```
 
-The API starts at `http://localhost:8000`. A simple frontend for manual testing is served from `/static/index.html`.
+API поднимается на `http://localhost:8000`. Фронтенд для ручного тестирования доступен по адресу `/static/index.html`.
 
-To populate the database with generated test data:
+Для наполнения базы тестовыми данными:
 
 ```bash
 docker compose exec app python seed_data.py
