@@ -11,7 +11,12 @@ from app.models.booking import Booking
 from app.models.resident import Resident
 from app.models.room import Room
 from app.models.room_type import RoomType
-from app.schemas.booking import BookingCheckIn, BookingCreate, BookingUpdate, BookingResponse
+from app.schemas.booking import (
+    BookingCheckIn,
+    BookingCreate,
+    BookingUpdate,
+    BookingResponse,
+)
 from app.schemas.resident import ResidentResponse
 
 router = APIRouter(prefix="/bookings", tags=["bookings"])
@@ -33,7 +38,9 @@ def get_one(booking_id: int, db: Session = Depends(get_db)):
 @router.post("/", response_model=BookingResponse, status_code=201)
 def create(data: BookingCreate, db: Session = Depends(get_db)):
     if data.planned_check_in >= data.planned_check_out:
-        raise HTTPException(status_code=400, detail="Check-in date must be before check-out date")
+        raise HTTPException(
+            status_code=400, detail="Check-in date must be before check-out date"
+        )
 
     bed = db.get(Bed, data.bed_id)
     if bed is None:
@@ -51,15 +58,21 @@ def create(data: BookingCreate, db: Session = Depends(get_db)):
         )
     ).scalar_one_or_none()
     if overlap is not None:
-        raise HTTPException(status_code=400, detail="Bed is already booked for these dates")
+        raise HTTPException(
+            status_code=400, detail="Bed is already booked for these dates"
+        )
 
     if bed.current_resident_id is not None:
         resident = db.get(Resident, bed.current_resident_id)
         if resident.is_current:
             effective_checkout = resident.actual_check_out or resident.planned_check_out
-            if (data.planned_check_in < effective_checkout
-                    and data.planned_check_out > resident.check_in_date):
-                raise HTTPException(status_code=400, detail="Bed is occupied during these dates")
+            if (
+                data.planned_check_in < effective_checkout
+                and data.planned_check_out > resident.check_in_date
+            ):
+                raise HTTPException(
+                    status_code=400, detail="Bed is occupied during these dates"
+                )
 
     booking = Booking(**data.model_dump())
     db.add(booking)
@@ -74,7 +87,9 @@ def update(booking_id: int, data: BookingUpdate, db: Session = Depends(get_db)):
     if booking is None:
         raise HTTPException(status_code=404, detail="Booking not found")
     if data.planned_check_in >= data.planned_check_out:
-        raise HTTPException(status_code=400, detail="Check-in date must be before check-out date")
+        raise HTTPException(
+            status_code=400, detail="Check-in date must be before check-out date"
+        )
     overlap = db.execute(
         select(Booking).where(
             Booking.bed_id == booking.bed_id,
@@ -84,7 +99,9 @@ def update(booking_id: int, data: BookingUpdate, db: Session = Depends(get_db)):
         )
     ).scalar_one_or_none()
     if overlap is not None:
-        raise HTTPException(status_code=400, detail="Bed is already booked for these dates")
+        raise HTTPException(
+            status_code=400, detail="Bed is already booked for these dates"
+        )
     for field, value in data.model_dump().items():
         setattr(booking, field, value)
     db.commit()
@@ -93,7 +110,9 @@ def update(booking_id: int, data: BookingUpdate, db: Session = Depends(get_db)):
 
 
 @router.post("/{booking_id}/check-in", response_model=ResidentResponse, status_code=201)
-def check_in_from_booking(booking_id: int, data: BookingCheckIn, db: Session = Depends(get_db)):
+def check_in_from_booking(
+    booking_id: int, data: BookingCheckIn, db: Session = Depends(get_db)
+):
     booking = db.get(Booking, booking_id)
     if booking is None:
         raise HTTPException(status_code=404, detail="Booking not found")
@@ -129,7 +148,9 @@ def check_in_from_booking(booking_id: int, data: BookingCheckIn, db: Session = D
         db.commit()
     except IntegrityError:
         db.rollback()
-        raise HTTPException(status_code=409, detail="Bed was just occupied by someone else")
+        raise HTTPException(
+            status_code=409, detail="Bed was just occupied by someone else"
+        )
     db.refresh(resident)
     return resident
 

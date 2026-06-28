@@ -11,7 +11,12 @@ from app.models.booking import Booking
 from app.models.resident import Resident
 from app.models.room import Room
 from app.models.room_type import RoomType
-from app.schemas.resident import ResidentCheckIn, ResidentExtend, ResidentResponse, ResidentUpdate
+from app.schemas.resident import (
+    ResidentCheckIn,
+    ResidentExtend,
+    ResidentResponse,
+    ResidentUpdate,
+)
 
 router = APIRouter(prefix="/residents", tags=["residents"])
 
@@ -44,7 +49,9 @@ def check_in(data: ResidentCheckIn, db: Session = Depends(get_db)):
     # if data.planned_check_out <= datetime.date.today():
     #     raise HTTPException(status_code=400, detail="Planned check-out must be in the future")
     if data.planned_check_out < datetime.date.today():
-        raise HTTPException(status_code=400, detail="Planned check-out must be in the future")
+        raise HTTPException(
+            status_code=400, detail="Planned check-out must be in the future"
+        )
 
     # проверяем нет ли активных броней на это место
     overlap_booking = db.execute(
@@ -55,7 +62,9 @@ def check_in(data: ResidentCheckIn, db: Session = Depends(get_db)):
         )
     ).scalar_one_or_none()
     if overlap_booking is not None:
-        raise HTTPException(status_code=400, detail="Bed has an active booking for these dates")
+        raise HTTPException(
+            status_code=400, detail="Bed has an active booking for these dates"
+        )
 
     room = db.get(Room, bed.room_id)
     room_type = db.get(RoomType, room.room_type_id)
@@ -81,7 +90,9 @@ def check_in(data: ResidentCheckIn, db: Session = Depends(get_db)):
         db.commit()
     except IntegrityError:
         db.rollback()
-        raise HTTPException(status_code=409, detail="Bed was just occupied by someone else")
+        raise HTTPException(
+            status_code=409, detail="Bed was just occupied by someone else"
+        )
     db.refresh(resident)
     return resident
 
@@ -108,7 +119,9 @@ def extend_stay(record_id: int, data: ResidentExtend, db: Session = Depends(get_
     if not resident.is_current:
         raise HTTPException(status_code=400, detail="Resident has already checked out")
     if data.planned_check_out <= datetime.date.today():
-        raise HTTPException(status_code=400, detail="New check-out date must be in the future")
+        raise HTTPException(
+            status_code=400, detail="New check-out date must be in the future"
+        )
     resident.planned_check_out = data.planned_check_out
     db.commit()
     db.refresh(resident)

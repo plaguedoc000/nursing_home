@@ -55,4 +55,6 @@ def delete(pansionat_id: int, db: Session = Depends(get_db)):
         db.commit()
     except IntegrityError:
         db.rollback()
-        raise HTTPException(status_code=400, detail="Cannot delete: pansionat has rooms")
+        raise HTTPException(
+            status_code=400, detail="Cannot delete: pansionat has rooms"
+        )

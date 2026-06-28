@@ -55,4 +55,6 @@ def delete(room_type_id: int, db: Session = Depends(get_db)):
         db.commit()
     except IntegrityError:
         db.rollback()
-        raise HTTPException(status_code=400, detail="Cannot delete: room type is used in rooms")
+        raise HTTPException(
+            status_code=400, detail="Cannot delete: room type is used in rooms"
+        )
